@@ -1,0 +1,2168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stitchway CRM</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,700&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --coral:#DA4C3F;--coral-dark:#B83530;
+  --cream:#FAF8F5;--warm-white:#FFFEFB;--warm-rule:#E8E4DE;
+  --dark:#1C1A17;--charcoal:#2A2724;--mid:#6A6560;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --sans:'Jost',sans-serif;
+  --green:#3D6B4F;--amber:#B8870A;--blue:#3A6A9A;--purple:#6A4A8A;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--sans);background:var(--warm-white);color:var(--charcoal);min-height:100vh;display:flex;flex-direction:column;font-size:14px;}
+/* HEADER */
+header{background:var(--dark);border-bottom:3px solid var(--coral);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:var(--serif);font-size:24px;font-weight:700;display:flex;align-items:baseline;}
+.logo-s{color:#fff;}.logo-w{color:var(--coral);}
+.logo-tag{font-family:var(--sans);font-size:10px;font-weight:500;color:rgba(255,255,255,0.3);letter-spacing:2px;text-transform:uppercase;margin-left:14px;}
+.hdr-right{font-size:11px;color:rgba(255,255,255,0.3);text-align:right;line-height:1.8;letter-spacing:0.3px;}
+.hdr-sync{display:flex;align-items:center;gap:8px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+.sync-dot.off{background:#888;}
+/* NAV */
+.nav{background:#141210;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;flex-shrink:0;overflow-x:auto;}
+.nt{padding:0 20px;height:42px;display:flex;align-items:center;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.35);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.15s;white-space:nowrap;gap:7px;}
+.nt:hover{color:rgba(255,255,255,0.7);}
+.nt.on{color:#fff;border-bottom-color:var(--coral);}
+/* SHELL */
+.app{display:flex;flex:1;overflow:hidden;height:calc(100vh - 102px);}
+/* SIDEBAR */
+.sb{width:280px;background:var(--cream);border-right:1px solid var(--warm-rule);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;}
+.sb-hd{padding:14px 16px;border-bottom:1px solid var(--warm-rule);display:flex;flex-direction:column;gap:8px;}
+.sb-title{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--coral);}
+.sb-count{color:var(--mid);font-weight:400;}
+.srch{width:100%;padding:8px 12px;border:1px solid var(--warm-rule);border-top:2px solid var(--coral);font-family:var(--sans);font-size:12px;background:#fff;color:var(--charcoal);outline:none;transition:border-color 0.15s;}
+.srch:focus{border-color:var(--coral);box-shadow:0 0 0 2px rgba(218,76,63,0.08);}
+.flt{display:flex;gap:4px;flex-wrap:wrap;}
+.fb{padding:3px 10px;border:1px solid var(--warm-rule);background:#fff;font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;color:var(--mid);transition:all 0.12s;}
+.fb.on,.fb:hover{background:var(--dark);color:#fff;border-color:var(--dark);}
+.sb-btn{width:100%;padding:9px 12px;border:none;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:background 0.15s;display:flex;align-items:center;justify-content:center;gap:6px;}
+.sb-btn-primary{background:var(--coral);color:#fff;}.sb-btn-primary:hover{background:var(--coral-dark);}
+.sb-btn-ghost{background:#fff;color:var(--charcoal);border:1px solid var(--warm-rule);}.sb-btn-ghost:hover{background:var(--warm-rule);}
+.sb-btn-teal{background:var(--green);color:#fff;}.sb-btn-teal:hover{background:#2d5a40;}
+.sb-btn-blue{background:var(--blue);color:#fff;}.sb-btn-blue:hover{background:#2d5a87;}
+/* LIST */
+.items{flex:1;overflow-y:auto;}
+.item{padding:12px 16px;border-bottom:1px solid var(--warm-rule);cursor:pointer;transition:background 0.1s;}
+.item:hover{background:#fff;}
+.item.on{background:var(--dark);}
+.item.on .item-name{color:#fff;}
+.item.on .item-sub{color:rgba(255,255,255,0.45);}
+.item-name{font-weight:600;font-size:13px;margin-bottom:3px;}
+.item-sub{font-size:11px;color:var(--mid);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:5px;}
+.badge{display:inline-block;padding:2px 8px;font-size:10px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;color:#fff;}
+/* MAIN */
+.main{flex:1;overflow-y:auto;background:var(--warm-white);}
+.es{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;text-align:center;}
+.es-icon{font-size:36px;opacity:0.3;}
+.es h2{font-family:var(--serif);font-size:22px;font-weight:600;color:var(--mid);}
+.es p{font-size:12px;color:var(--mid);max-width:220px;line-height:1.6;}
+/* DETAIL */
+.det{padding:24px 28px;max-width:900px;}
+.det-hd{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:16px;gap:12px;padding-bottom:16px;border-bottom:1px solid var(--warm-rule);}
+.det-name{font-family:var(--serif);font-size:26px;font-weight:700;color:var(--dark);line-height:1.1;}
+.det-meta{font-size:11px;color:var(--mid);margin-top:4px;letter-spacing:0.3px;}
+.det-acts{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;align-items:center;}
+/* BUTTONS */
+.btn{padding:7px 16px;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:0.8px;text-transform:uppercase;cursor:pointer;border:none;transition:all 0.14s;white-space:nowrap;display:inline-flex;align-items:center;gap:5px;}
+.btn-primary{background:var(--coral);color:#fff;}.btn-primary:hover{background:var(--coral-dark);}
+.btn-dark{background:var(--dark);color:#fff;}.btn-dark:hover{background:var(--charcoal);}
+.btn-ghost{background:transparent;color:var(--charcoal);border:1px solid var(--warm-rule);}.btn-ghost:hover{background:var(--warm-rule);}
+.btn-danger{background:transparent;color:#c0392b;border:1px solid #f5c6c2;}.btn-danger:hover{background:#fef2f1;}
+.btn-blue{background:var(--blue);color:#fff;}.btn-blue:hover{background:#2d5a87;}
+.btn-green{background:var(--green);color:#fff;}.btn-green:hover{background:#2d5a40;}
+.btn-ai{background:linear-gradient(135deg,var(--coral),#c0392b);color:#fff;}.btn-ai:hover{opacity:0.9;}
+/* STAGES */
+.stages{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--warm-rule);}
+.stage-pill{padding:4px 12px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;background:#fff;color:var(--mid);transition:all 0.14s;}
+.stage-pill.on{color:#fff;border-color:transparent;}
+.stage-pill:hover:not(.on){background:var(--warm-rule);}
+/* FORM */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px;}
+.ff label{display:block;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:4px;}
+.ff input,.ff textarea,.ff select{width:100%;padding:8px 10px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:12px;background:#fff;color:var(--charcoal);outline:none;transition:border-color 0.15s;resize:vertical;}
+.ff input:focus,.ff textarea:focus,.ff select:focus{border-color:var(--coral);}
+.ff.full{grid-column:1/-1;}
+/* SECTION */
+.sec{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--coral);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+.sec::after{content:'';flex:1;height:1px;background:var(--warm-rule);}
+hr.dv{border:none;border-top:1px solid var(--warm-rule);margin:20px 0;}
+/* LOG */
+.log-item{padding:8px 12px;background:#fff;border:1px solid var(--warm-rule);border-left:3px solid var(--warm-rule);margin-bottom:5px;font-size:12px;line-height:1.5;position:relative;}
+.log-item.email-log{border-left-color:var(--blue);}
+.log-item.update-log{border-left-color:var(--coral);}
+.log-dt{font-size:10px;color:#bbb;margin-bottom:2px;}
+.log-del{position:absolute;top:8px;right:10px;background:none;border:none;color:#ddd;cursor:pointer;font-size:11px;padding:0;}
+.log-del:hover{color:var(--coral);}
+.log-add{display:flex;gap:6px;margin-top:8px;}
+.log-add textarea{flex:1;padding:8px 10px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:12px;resize:none;height:52px;outline:none;background:#fff;color:var(--charcoal);}
+.log-add textarea:focus{border-color:var(--coral);}
+.log-add .log-btn{padding:0 14px;background:var(--coral);color:#fff;border:none;font-family:var(--sans);font-size:11px;font-weight:600;letter-spacing:0.8px;cursor:pointer;}
+.log-add .log-btn:hover{background:var(--coral-dark);}
+/* TEMPLATES */
+.tpl-tabs{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:10px;}
+.tpl-tab{padding:4px 10px;border:1px solid var(--warm-rule);background:#fff;font-family:var(--sans);font-size:10px;font-weight:600;cursor:pointer;color:var(--mid);transition:all 0.12s;letter-spacing:0.5px;}
+.tpl-tab.on{background:var(--dark);color:#fff;border-color:var(--dark);}
+.tpl-tab:hover:not(.on){background:var(--warm-rule);}
+.tpl-box{background:#fff;border:1px solid var(--warm-rule);border-top:2px solid var(--dark);}
+.tpl-hd{padding:10px 16px;background:var(--dark);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.tpl-ttl{font-family:var(--serif);font-size:15px;font-weight:600;color:#fff;}
+.tpl-when{font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;font-style:italic;}
+.tpl-acts{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.tpl-subj{padding:8px 16px;background:var(--cream);border-bottom:1px solid var(--warm-rule);font-size:11px;color:var(--mid);}
+.tpl-subj strong{color:var(--charcoal);}
+.tpl-body{padding:14px 16px;font-size:12px;line-height:1.85;white-space:pre-wrap;max-height:280px;overflow-y:auto;color:var(--charcoal);}
+.tpl-body .ph{background:#FFF3E0;border:1px solid #FFB74D;padding:0 2px;font-weight:600;font-size:11px;color:#E65100;}
+.tpl-ai-row{padding:10px 16px;border-top:1px solid var(--warm-rule);background:var(--cream);display:flex;align-items:center;gap:8px;}
+.tpl-ai-note{font-size:10px;color:var(--mid);flex:1;font-style:italic;}
+/* AI MODAL */
+.ai-modal{background:var(--warm-white);width:100%;max-width:700px;box-shadow:0 24px 70px rgba(0,0,0,0.3);display:flex;flex-direction:column;max-height:92vh;}
+.ai-modal-hd{background:var(--dark);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--coral);}
+.ai-modal-hd h3{font-family:var(--serif);font-size:18px;color:#fff;font-weight:600;}
+.ai-modal-body{padding:20px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:14px;}
+.ai-cand-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ai-cand-card{padding:10px 14px;border:1px solid var(--warm-rule);background:#fff;cursor:pointer;transition:all 0.15s;}
+.ai-cand-card:hover,.ai-cand-card.sel{border-color:var(--coral);background:#FFF8F7;}
+.ai-cand-card.sel{border-left:3px solid var(--coral);}
+.ai-cand-name{font-weight:600;font-size:13px;margin-bottom:2px;}
+.ai-cand-sub{font-size:11px;color:var(--mid);}
+.ai-out{background:#fff;border:1px solid var(--warm-rule);border-top:2px solid var(--coral);padding:16px;font-size:13px;line-height:1.85;white-space:pre-wrap;min-height:200px;color:var(--charcoal);}
+.ai-modal-ft{padding:14px 20px;border-top:1px solid var(--warm-rule);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--cream);}
+.ai-note{font-size:10px;color:var(--mid);font-style:italic;}
+/* COMPOSE */
+.compose-modal{background:var(--warm-white);width:100%;max-width:640px;box-shadow:0 24px 70px rgba(0,0,0,0.3);display:flex;flex-direction:column;max-height:90vh;}
+.compose-hd{background:var(--dark);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid var(--coral);}
+.compose-hd h3{font-family:var(--serif);font-size:17px;color:#fff;font-weight:600;}
+.compose-body{padding:18px;overflow-y:auto;flex:1;}
+.cf{margin-bottom:12px;}
+.cf label{display:block;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:4px;}
+.cf input{width:100%;padding:8px 10px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:12px;background:#fff;color:var(--charcoal);outline:none;}
+.cf input:focus{border-color:var(--coral);}
+.cf textarea{width:100%;padding:10px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:12px;background:#fff;color:var(--charcoal);outline:none;resize:vertical;line-height:1.75;min-height:240px;}
+.cf textarea:focus{border-color:var(--coral);}
+.compose-ft{padding:14px 18px;border-top:1px solid var(--warm-rule);display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--cream);}
+.compose-tip{font-size:10px;color:var(--mid);flex:1;font-style:italic;}
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,0.55);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
+.modal{background:var(--warm-white);width:100%;max-width:540px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.25);max-height:90vh;overflow-y:auto;border-top:3px solid var(--coral);}
+.modal h2{font-family:var(--serif);font-size:20px;font-weight:700;margin-bottom:6px;color:var(--dark);}
+.modal p{font-size:12px;color:var(--mid);margin-bottom:14px;line-height:1.55;}
+.modal textarea{width:100%;height:130px;padding:10px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:12px;resize:vertical;outline:none;margin-bottom:12px;background:#fff;color:var(--charcoal);}
+.modal-acts{display:flex;gap:6px;justify-content:flex-end;margin-top:14px;}
+.close-btn{background:none;border:none;color:rgba(255,255,255,0.5);font-size:16px;cursor:pointer;line-height:1;padding:2px;}
+.close-btn:hover{color:#fff;}
+/* MATCH */
+.match-wrap{max-width:860px;padding:24px 28px;}
+.m-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.m-card{background:#fff;border:1px solid var(--warm-rule);padding:12px 16px;margin-bottom:6px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:all 0.14s;border-left:3px solid transparent;}
+.m-card:hover{border-left-color:var(--coral);background:var(--cream);}
+.score-ring{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--serif);font-size:16px;font-weight:700;flex-shrink:0;}
+.m-info{flex:1;min-width:0;}
+.m-name{font-weight:600;font-size:13px;margin-bottom:3px;}
+.m-detail{font-size:11px;color:var(--mid);line-height:1.5;}
+.m-reason{font-size:11px;color:var(--mid);font-style:italic;margin-top:4px;line-height:1.4;}
+.m-bars{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.m-bar{flex:1;min-width:55px;}
+.m-bar-lbl{font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#ccc;margin-bottom:2px;}
+.m-bar-tr{height:3px;background:var(--warm-rule);}
+.m-bar-fill{height:100%;transition:width 0.5s ease;}
+.m-acts{display:flex;gap:5px;margin-top:8px;}
+/* PIPELINE */
+.pipeline-wrap{padding:24px 28px;}
+.p-col{background:var(--cream);border:1px solid var(--warm-rule);border-top:2px solid var(--coral);min-width:200px;display:flex;flex-direction:column;}
+.p-col-hd{padding:10px 14px;border-bottom:1px solid var(--warm-rule);display:flex;align-items:center;justify-content:space-between;}
+.p-col-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--charcoal);}
+.p-col-cnt{font-size:10px;font-weight:600;color:var(--coral);}
+.p-cards{padding:8px;display:flex;flex-direction:column;gap:6px;flex:1;}
+.p-card{background:#fff;border:1px solid var(--warm-rule);padding:10px 12px;font-size:12px;cursor:pointer;transition:all 0.14s;}
+.p-card:hover{border-color:var(--coral);}
+.p-card-name{font-weight:600;margin-bottom:2px;}
+.p-card-sub{font-size:10px;color:var(--mid);}
+.p-card-week{font-size:10px;font-weight:600;color:var(--coral);margin-top:4px;}
+.p-empty{font-size:11px;color:#ccc;text-align:center;padding:16px 8px;font-style:italic;}
+/* SUBMISSIONS */
+.sub-card{background:#fff;border:1px solid var(--warm-rule);border-left:3px solid var(--blue);padding:12px 16px;margin-bottom:8px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
+.sub-card-info{flex:1;min-width:0;}
+.sub-card-name{font-weight:600;font-size:13px;margin-bottom:3px;}
+.sub-card-detail{font-size:11px;color:var(--mid);line-height:1.5;}
+.sub-card-acts{display:flex;gap:5px;flex-shrink:0;align-items:flex-start;}
+/* TOAST */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--dark);color:#fff;padding:10px 16px;font-size:12px;border-left:3px solid var(--coral);z-index:300;opacity:0;transform:translateY(8px);transition:all 0.22s;pointer-events:none;max-width:300px;font-family:var(--sans);}
+.toast.show{opacity:1;transform:translateY(0);}
+.hidden{display:none!important;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--warm-rule);}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--coral);animation:blink 1.1s ease-in-out infinite;}
+.dot:nth-child(2){animation-delay:0.18s;}.dot:nth-child(3){animation-delay:0.36s;}
+@keyframes blink{0%,80%,100%{opacity:0.25;transform:scale(0.8);}40%{opacity:1;transform:scale(1);}}
+.ai-ld{display:flex;align-items:center;gap:6px;padding:16px;color:var(--mid);font-size:12px;}
+.week-bar{height:4px;background:var(--warm-rule);margin-top:6px;}
+.week-fill{height:100%;background:var(--coral);transition:width 0.4s;}
+/* SETUP */
+.setup-wrap{min-height:100vh;background:linear-gradient(135deg,var(--dark) 0%,#2a2724 100%);display:flex;align-items:center;justify-content:center;padding:20px;}
+.setup-card{background:var(--warm-white);width:100%;max-width:560px;border-top:4px solid var(--coral);padding:36px;}
+.setup-card h1{font-family:var(--serif);font-size:28px;font-weight:700;color:var(--dark);margin-bottom:6px;}
+.setup-card p{font-size:12px;color:var(--mid);line-height:1.6;margin-bottom:22px;}
+.setup-field{margin-bottom:16px;}
+.setup-field label{display:block;font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mid);margin-bottom:5px;}
+.setup-field input{width:100%;padding:10px 12px;border:1px solid var(--warm-rule);border-top:2px solid var(--coral);font-family:var(--sans);font-size:13px;background:#fff;color:var(--charcoal);outline:none;}
+.setup-field input:focus{border-color:var(--coral);}
+.setup-sql{background:var(--cream);border:1px solid var(--warm-rule);padding:14px;font-family:monospace;font-size:10.5px;line-height:1.7;color:var(--charcoal);overflow-x:auto;max-height:200px;overflow-y:auto;white-space:pre;margin-bottom:16px;}
+.info-box{background:#EFF6FF;border:1px solid #BFDBFE;border-left:3px solid var(--blue);padding:10px 14px;font-size:12px;color:#1D4ED8;line-height:1.6;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<input type="file" id="import-sc" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImport(event,'sc')">
+<input type="file" id="import-uc" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleImport(event,'uc')">
+
+<!-- CREDENTIALS SCREEN (first time only) -->
+<div id="setup-screen" class="setup-wrap hidden">
+  <div style="width:100%;max-width:640px;">
+    <!-- Header -->
+    <div style="background:var(--dark);border-bottom:3px solid var(--coral);padding:28px 36px;text-align:center;">
+      <div class="logo" style="justify-content:center;margin-bottom:6px;font-size:28px;"><span class="logo-s">Stitch</span><span class="logo-w">way</span></div>
+      <div style="font-size:11px;font-weight:500;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.3);">CRM — First Time Setup</div>
+    </div>
+
+    <!-- Progress steps -->
+    <div style="background:#141210;padding:16px 36px;display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div id="sp1" style="flex:1;text-align:center;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--coral);padding:6px 0;border-bottom:2px solid var(--coral);">1. Connect</div>
+      <div id="sp2" style="flex:1;text-align:center;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:6px 0;border-bottom:2px solid transparent;">2. SQL Setup</div>
+      <div id="sp3" style="flex:1;text-align:center;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.25);padding:6px 0;border-bottom:2px solid transparent;">3. Sign In</div>
+    </div>
+
+    <!-- Step 1: Enter credentials -->
+    <div id="setup-step1" style="background:var(--warm-white);padding:32px 36px;">
+      <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Connect to your Supabase database</div>
+      <div style="font-size:12px;color:var(--mid);margin-bottom:22px;line-height:1.6;">You only do this once per device. Your credentials are saved locally after this.</div>
+
+      <!-- Where to find keys -->
+      <div style="background:#EFF6FF;border-left:3px solid var(--blue);padding:12px 16px;margin-bottom:20px;font-size:12px;line-height:1.7;color:#1D4ED8;">
+        <strong>Where to find these:</strong> Go to <strong>supabase.com</strong> → your project → <strong>Settings</strong> (gear icon, bottom left) → <strong>API</strong><br>
+        Copy the <strong>Project URL</strong> and the <strong>anon / public</strong> key.
+      </div>
+
+      <div class="setup-field">
+        <label>Project URL</label>
+        <input id="su-url" placeholder="https://xxxxxxxxxxxx.supabase.co" oninput="clearSetupErr()">
+        <div style="font-size:10px;color:var(--mid);margin-top:4px;">Looks like: https://abcdefghijkl.supabase.co</div>
+      </div>
+      <div class="setup-field">
+        <label>Anon / Public API Key</label>
+        <div style="position:relative;">
+          <input id="su-key" placeholder="eyJhbGci…" type="password" style="padding-right:40px;" oninput="clearSetupErr()">
+          <button onclick="toggleKeyVis()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:var(--mid);" id="key-eye">👁</button>
+        </div>
+        <div style="font-size:10px;color:var(--mid);margin-top:4px;">Long string starting with "eyJ..." — use the <strong>anon</strong> key, not service_role</div>
+      </div>
+
+      <div id="su-err" class="hidden" style="background:#FEE2E2;border-left:3px solid var(--coral);padding:10px 14px;font-size:12px;color:#B91C1C;margin-bottom:14px;border-radius:2px;"></div>
+      <div id="su-ok" class="hidden" style="background:#F0FDF4;border-left:3px solid var(--green);padding:10px 14px;font-size:12px;color:#166534;margin-bottom:14px;border-radius:2px;">✓ Connected successfully!</div>
+
+      <button id="su-connect-btn" class="btn btn-primary" style="width:100%;padding:12px;font-size:12px;letter-spacing:1px;" onclick="doConnect()">Test Connection & Continue →</button>
+
+      <hr class="dv" style="margin:24px 0;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--coral);margin-bottom:10px;">Haven't run the database SQL yet?</div>
+      <div style="font-size:12px;color:var(--mid);margin-bottom:10px;line-height:1.6;">Copy this script, paste it into <strong>Supabase → SQL Editor</strong>, and click Run. Do this before connecting.</div>
+      <div class="setup-sql" id="setup-sql-box" style="max-height:160px;"></div>
+      <button class="btn btn-ghost" style="font-size:10px;margin-top:8px;" onclick="copySQL()">📋 Copy SQL Script</button>
+    </div>
+
+    <!-- Step 2: SQL confirmation -->
+    <div id="setup-step2" class="hidden" style="background:var(--warm-white);padding:32px 36px;">
+      <div style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px;">Have you run the database SQL script?</div>
+      <div style="font-size:12px;color:var(--mid);margin-bottom:22px;line-height:1.6;">If you haven't done this yet, the CRM won't be able to save any data.</div>
+
+      <div style="background:#F0FDF4;border-left:3px solid var(--green);padding:14px 16px;margin-bottom:20px;font-size:12px;line-height:1.8;color:#166534;">
+        <strong>How to run it:</strong><br>
+        1. Go to <strong>supabase.com</strong> → your project<br>
+        2. Click <strong>SQL Editor</strong> in the left sidebar<br>
+        3. Paste the script below and click <strong>Run</strong><br>
+        4. You should see: <em>"Success. No rows returned"</em>
+      </div>
+
+      <div class="setup-sql" id="setup-sql-box2" style="max-height:200px;"></div>
+      <button class="btn btn-ghost" style="font-size:10px;margin-top:8px;margin-bottom:20px;" onclick="copySQL()">📋 Copy SQL Script</button>
+
+      <div style="display:flex;gap:10px;">
+        <button class="btn btn-ghost" onclick="setupBack()" style="flex:1;padding:12px;">← Back</button>
+        <button class="btn btn-primary" onclick="setupNext()" style="flex:2;padding:12px;font-size:12px;letter-spacing:1px;">Yes, SQL is done — Continue →</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen" class="setup-wrap hidden">
+  <div class="setup-card" style="max-width:380px;">
+    <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:6px;">
+      <div class="logo"><span class="logo-s">Stitch</span><span class="logo-w">way</span></div>
+      <span class="logo-tag">CRM</span>
+    </div>
+    <div style="font-size:11px;color:var(--mid);margin-bottom:28px;letter-spacing:0.3px;">Specialist Textile &amp; Upholstery Recruitment</div>
+    <div class="setup-field"><label>Email</label><input id="login-email" type="email" placeholder="you@example.com" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div class="setup-field"><label>Password</label><input id="login-pw" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+    <div id="login-err" class="hidden" style="background:#FEE2E2;border-left:3px solid var(--coral);padding:10px 14px;font-size:12px;color:#B91C1C;margin-bottom:14px;"></div>
+    <button id="login-btn" class="btn btn-primary" style="width:100%;padding:12px;font-size:12px;letter-spacing:1px;" onclick="doLogin()">Sign In</button>
+    <div style="margin-top:16px;text-align:center;">
+      <button onclick="showSetup()" style="background:none;border:none;font-family:var(--sans);font-size:10px;color:var(--mid);cursor:pointer;text-decoration:underline;">Change Supabase credentials</button>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="app-shell" class="hidden">
+<header>
+  <div style="display:flex;align-items:center;gap:0;">
+    <div class="logo"><span class="logo-s">Stitch</span><span class="logo-w">way</span></div>
+    <span class="logo-tag">CRM</span>
+  </div>
+  <div class="hdr-sync">
+    <div class="sync-dot" id="sync-dot"></div>
+    <div class="hdr-right" id="hdr-right">Connecting…</div>
+    <button onclick="doSignOut()" style="margin-left:16px;background:none;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.4);font-family:var(--sans);font-size:10px;padding:4px 10px;cursor:pointer;letter-spacing:0.5px;transition:all 0.2s;" onmouseover="this.style.borderColor='rgba(218,76,63,0.6)';this.style.color='var(--coral)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.15)';this.style.color='rgba(255,255,255,0.4)';">Sign Out</button>
+  </div>
+</header>
+<div class="nav">
+  <div class="nt on" id="tab-dash" onclick="SW('dash')"><span>Dashboard</span></div>
+  <div class="nt" id="tab-co" onclick="SW('co')"><span>Companies</span></div>
+  <div class="nt" id="tab-jobs" onclick="SW('jobs')"><span>Jobs</span></div>
+  <div class="nt" id="tab-sc" onclick="SW('sc')"><span>Sewing Candidates</span></div>
+  <div class="nt" id="tab-uc" onclick="SW('uc')"><span>Upholstery Candidates</span></div>
+  <div class="nt" id="tab-subs" onclick="SW('subs')"><span>Submissions</span></div>
+  <div class="nt" id="tab-match" onclick="SW('match')"><span>Match</span></div>
+  <div class="nt" id="tab-pipeline" onclick="SW('pipeline')"><span>Pipeline</span></div>
+</div>
+<div class="app">
+
+  <!-- DASHBOARD -->
+  <div id="view-dash" style="display:none;flex:1;overflow-y:auto;">
+    <div style="padding:28px 32px;max-width:1100px;">
+      <div style="margin-bottom:24px;">
+        <div style="font-family:var(--serif);font-size:28px;font-weight:700;color:var(--dark);margin-bottom:4px;">Good morning, Ryan</div>
+        <div style="font-size:12px;color:var(--mid);" id="dash-date"></div>
+      </div>
+      <!-- KPI CARDS -->
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:28px;" id="dash-kpis"></div>
+      <!-- TWO COLUMN -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+        <!-- Recent candidates -->
+        <div style="background:#fff;border:1px solid var(--warm-rule);border-top:2px solid var(--coral);">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--warm-rule);display:flex;align-items:center;justify-content:space-between;">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--coral);">Recent Candidates</div>
+            <div style="display:flex;gap:6px;">
+              <button class="fb on" id="dash-cand-sewing" onclick="setDashCandPool('sc',this)" style="font-size:9px;padding:2px 8px;">Sewing</button>
+              <button class="fb" id="dash-cand-upholstery" onclick="setDashCandPool('uc',this)" style="font-size:9px;padding:2px 8px;">Upholstery</button>
+            </div>
+          </div>
+          <div id="dash-recent-cands" style="max-height:280px;overflow-y:auto;"></div>
+        </div>
+        <!-- Open jobs -->
+        <div style="background:#fff;border:1px solid var(--warm-rule);border-top:2px solid var(--blue);">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--warm-rule);">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue);">Open Jobs</div>
+          </div>
+          <div id="dash-open-jobs" style="max-height:280px;overflow-y:auto;"></div>
+        </div>
+      </div>
+      <!-- BOTTOM ROW -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+        <!-- Pending submissions -->
+        <div style="background:#fff;border:1px solid var(--warm-rule);border-top:2px solid var(--amber);">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--warm-rule);">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber);">Pending Submissions</div>
+          </div>
+          <div id="dash-pending-subs" style="max-height:220px;overflow-y:auto;"></div>
+        </div>
+        <!-- Pipeline overview -->
+        <div style="background:#fff;border:1px solid var(--warm-rule);border-top:2px solid var(--green);">
+          <div style="padding:12px 16px;border-bottom:1px solid var(--warm-rule);">
+            <div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--green);">Active Pipeline</div>
+          </div>
+          <div id="dash-pipeline" style="max-height:220px;overflow-y:auto;padding:8px 0;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JOBS -->
+  <div id="view-jobs" style="display:none;flex:1;overflow:hidden;">
+    <div class="sb">
+      <div class="sb-hd">
+        <div class="sb-title">Jobs <span class="sb-count" id="jobs-cnt"></span></div>
+        <input class="srch" id="jobs-srch" placeholder="Company, role, location…" oninput="renderJobs()">
+        <div class="flt" id="jobs-flt">
+          <button class="fb on" onclick="setF('jobs','all',this)">All</button>
+          <button class="fb" onclick="setF('jobs','Open',this)">Open</button>
+          <button class="fb" onclick="setF('jobs','Filled',this)">Filled</button>
+          <button class="fb" onclick="setF('jobs','Closed',this)">Closed</button>
+        </div>
+        <div class="flt" id="jobs-pool-flt" style="margin-top:4px;">
+          <button class="fb on" onclick="setJobPool('all',this)">All</button>
+          <button class="fb" onclick="setJobPool('sewing',this)">Sewing</button>
+          <button class="fb" onclick="setJobPool('upholstery',this)">Upholstery</button>
+        </div>
+        <button class="sb-btn sb-btn-primary" onclick="om('addJobM')">+ Add Job</button>
+        <button class="sb-btn sb-btn-ghost" onclick="om('pasteJobM')">↑ Paste Job Listing</button>
+      </div>
+      <div class="items" id="jobs-list"></div>
+    </div>
+    <div class="main">
+      <div class="es" id="jobs-es"><div class="es-icon">💼</div><h2>No job selected</h2><p>Add a vacancy or select one to view details and match candidates.</p></div>
+      <div id="jobs-det" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- COMPANIES -->
+  <div id="view-co" style="display:none;flex:1;overflow:hidden;">
+    <div class="sb">
+      <div class="sb-hd">
+        <div class="sb-title">Companies <span class="sb-count" id="co-cnt"></span></div>
+        <input class="srch" id="co-srch" placeholder="Search company, contact, location…" oninput="renderCos()">
+        <div class="flt" id="co-flt">
+          <button class="fb on" onclick="setF('co','all',this)">All</button>
+          <button class="fb" onclick="setF('co','New Lead',this)">New</button>
+          <button class="fb" onclick="setF('co','Outreach Sent',this)">Outreach</button>
+          <button class="fb" onclick="setF('co','Follow-Up',this)">Follow-Up</button>
+          <button class="fb" onclick="setF('co','CV Submitted',this)">CV</button>
+          <button class="fb" onclick="setF('co','Interview',this)">Interview</button>
+          <button class="fb" onclick="setF('co','Placed',this)">Placed</button>
+        </div>
+        <button class="sb-btn sb-btn-primary" onclick="om('addCoM')">+ Add Company</button>
+        <button class="sb-btn sb-btn-ghost" onclick="om('bulkCoM')">↑ Paste Bulk List</button>
+      </div>
+      <div class="items" id="co-list"></div>
+    </div>
+    <div class="main">
+      <div class="es" id="co-es"><div class="es-icon">🏭</div><h2>No company selected</h2><p>Add or select a company to view details and send emails.</p></div>
+      <div id="co-det" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- SEWING CANDIDATES -->
+  <div id="view-sc" class="hidden" style="flex:1;overflow:hidden;">
+    <div class="sb">
+      <div class="sb-hd">
+        <div class="sb-title">Sewing Candidates <span class="sb-count" id="sc-cnt"></span></div>
+        <input class="srch" id="sc-srch" placeholder="Name, role, machine, location…" oninput="renderSC()">
+        <div class="flt" id="sc-flt">
+          <button class="fb on" onclick="setF('sc','all',this)">All</button>
+          <button class="fb" onclick="setF('sc','Active',this)">Active</button>
+          <button class="fb" onclick="setF('sc','Available',this)">Available</button>
+          <button class="fb" onclick="setF('sc','Busy',this)">Busy</button>
+          <button class="fb" onclick="setF('sc','Notice Period',this)">Notice</button>
+          <button class="fb" onclick="setF('sc','Placed',this)">Placed</button>
+        </div>
+        <button class="sb-btn sb-btn-primary" onclick="om('addSCM')">+ Add Candidate</button>
+        <button class="sb-btn sb-btn-teal" onclick="triggerImport('sc')">↑ Import from Excel</button>
+        <button class="sb-btn sb-btn-ghost" onclick="om('pasteImpM');setPasteType('sc')">↑ Paste Profile</button>
+      </div>
+      <div class="items" id="sc-list"></div>
+    </div>
+    <div class="main">
+      <div class="es" id="sc-es"><div class="es-icon">🧵</div><h2>No candidate selected</h2><p>Import from Excel, paste a profile, or add manually.</p></div>
+      <div id="sc-det" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- UPHOLSTERY CANDIDATES -->
+  <div id="view-uc" class="hidden" style="flex:1;overflow:hidden;">
+    <div class="sb">
+      <div class="sb-hd">
+        <div class="sb-title">Upholstery Candidates <span class="sb-count" id="uc-cnt"></span></div>
+        <input class="srch" id="uc-srch" placeholder="Name, role, technique, location…" oninput="renderUC()">
+        <div class="flt" id="uc-flt">
+          <button class="fb on" onclick="setF('uc','all',this)">All</button>
+          <button class="fb" onclick="setF('uc','Active',this)">Active</button>
+          <button class="fb" onclick="setF('uc','Available',this)">Available</button>
+          <button class="fb" onclick="setF('uc','Busy',this)">Busy</button>
+          <button class="fb" onclick="setF('uc','Employed - Open to Offers',this)">Employed/Open</button>
+          <button class="fb" onclick="setF('uc','Notice Period',this)">Notice</button>
+          <button class="fb" onclick="setF('uc','Placed',this)">Placed</button>
+        </div>
+        <button class="sb-btn sb-btn-primary" onclick="om('addUCM')">+ Add Candidate</button>
+        <button class="sb-btn sb-btn-teal" onclick="triggerImport('uc')">↑ Import from Excel</button>
+        <button class="sb-btn sb-btn-ghost" onclick="om('pasteImpM');setPasteType('uc')">↑ Paste Profile</button>
+      </div>
+      <div class="items" id="uc-list"></div>
+    </div>
+    <div class="main">
+      <div class="es" id="uc-es"><div class="es-icon">🪑</div><h2>No candidate selected</h2><p>Import from Excel, paste a profile, or add manually.</p></div>
+      <div id="uc-det" class="hidden"></div>
+    </div>
+  </div>
+
+  <!-- SUBMISSIONS -->
+  <div id="view-subs" class="hidden" style="flex:1;overflow-y:auto;">
+    <div style="padding:24px 28px;max-width:900px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+        <div>
+          <div class="sec" style="margin:0;">Submissions</div>
+          <div style="font-size:12px;color:var(--mid);margin-top:4px;">Track every candidate submitted to a company. Generate tailored AI emails from here.</div>
+        </div>
+        <button class="btn btn-primary" onclick="om('addSubM')">+ New Submission</button>
+      </div>
+      <div id="subs-list"></div>
+    </div>
+  </div>
+
+  <!-- MATCH -->
+  <div id="view-match" class="hidden" style="flex:1;overflow-y:auto;">
+    <div class="match-wrap">
+      <div style="margin-bottom:20px;">
+        <div class="sec" style="font-size:11px;">Candidate Matching</div>
+        <div style="font-size:12px;color:var(--mid);margin-top:4px;">Select a company and describe the vacancy. AI will score every candidate across skills, location, salary and availability.</div>
+      </div>
+      <div class="m-grid">
+        <div class="ff"><label>Company</label><select id="m-co" onchange="clrM()"><option value="">— select —</option></select></div>
+        <div class="ff"><label>Role Required</label><input id="m-role" placeholder="e.g. Sewing Machinist" oninput="clrM()"></div>
+        <div class="ff"><label>Key Skills / Requirements</label><input id="m-sk" placeholder="e.g. leather, industrial machines, piped seams" oninput="clrM()"></div>
+        <div class="ff"><label>Candidate Pool</label><select id="m-pool" onchange="clrM()"><option value="both">Both pools</option><option value="sc">Sewing only</option><option value="uc">Upholstery only</option></select></div>
+        <div class="ff"><label>Salary Budget (£/yr)</label><input id="m-sal" type="number" placeholder="e.g. 25000" oninput="clrM()"></div>
+        <div class="ff"><label>Immediate Availability Only?</label><select id="m-av" onchange="clrM()"><option value="">No preference</option><option value="yes">Yes</option></select></div>
+      </div>
+      <button class="btn btn-ai" onclick="runMatch()" style="margin-bottom:20px;">✦ Find Best Matches</button>
+      <div id="m-out"></div>
+    </div>
+  </div>
+
+  <!-- PIPELINE -->
+  <div id="view-pipeline" class="hidden" style="flex:1;overflow-y:auto;">
+    <div class="pipeline-wrap">
+      <div style="margin-bottom:20px;">
+        <div class="sec" style="font-size:11px;">Temp-to-Perm Pipeline</div>
+        <div style="font-size:12px;color:var(--mid);margin-top:4px;">Track every active placement through the 13-week temp-to-perm period.</div>
+      </div>
+      <div id="pipeline-board"></div>
+    </div>
+  </div>
+
+</div><!-- end .app -->
+</div><!-- end #app-shell -->
+
+<!-- ═══ MODALS ═══════════════════════════════════════════════════════════ -->
+
+<!-- AI GENERATE MODAL -->
+<div class="mo hidden" id="aiGenM">
+  <div class="ai-modal">
+    <div class="ai-modal-hd"><h3>✦ AI Email Generator</h3><button class="close-btn" onclick="cm('aiGenM')">✕</button></div>
+    <div class="ai-modal-body">
+      <div><div class="sec">Select Candidate to Introduce</div><div class="ai-cand-grid" id="ai-cand-list"></div></div>
+      <div><div class="sec">Job Description (optional — improves match)</div><textarea id="ai-job-desc" rows="4" style="width:100%;padding:8px 10px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:12px;outline:none;resize:vertical;" placeholder="Paste the job spec here to get a tailored email…"></textarea></div>
+      <div id="ai-result-wrap" class="hidden">
+        <div class="sec">Generated Email</div>
+        <div style="margin-bottom:6px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mid);">Subject</div>
+        <input id="ai-subj-out" style="width:100%;padding:8px 10px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:12px;font-weight:600;outline:none;margin-bottom:10px;" readonly>
+        <div style="margin-bottom:6px;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--mid);">Body</div>
+        <div class="ai-out" id="ai-body-out" contenteditable="true"></div>
+      </div>
+    </div>
+    <div class="ai-modal-ft">
+      <span class="ai-note" id="ai-status-note">Select a candidate and click Generate</span>
+      <div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost" onclick="cm('aiGenM')">Cancel</button>
+        <button class="btn btn-ai" id="ai-gen-btn" onclick="runAIGenerate()">✦ Generate</button>
+        <button class="btn btn-dark hidden" id="ai-use-btn" onclick="useAIEmail()">Use This Email →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPOSE MODAL -->
+<div class="mo hidden" id="composeM">
+  <div class="compose-modal">
+    <div class="compose-hd"><h3>✉ Compose Email</h3><button class="close-btn" onclick="cm('composeM')">✕</button></div>
+    <div class="compose-body">
+      <div class="cf"><label>To</label><input id="c-to" type="email" placeholder="recipient@company.com"></div>
+      <div class="cf"><label>Subject</label><input id="c-subj"></div>
+      <div class="cf"><label>Body — edit before sending</label><textarea id="c-body"></textarea></div>
+    </div>
+    <div class="compose-ft">
+      <span class="compose-tip">Opens your email client pre-filled — review and send from there.</span>
+      <button class="btn btn-ghost" onclick="cm('composeM')">Cancel</button>
+      <button class="btn btn-ghost" onclick="copyEmail()">Copy Text</button>
+      <button class="btn btn-primary" onclick="doSend()">Open in Mail ✉</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD COMPANY -->
+<div class="mo hidden" id="addCoM">
+  <div class="modal">
+    <h2>Add Company</h2>
+    <div class="fg">
+      <div class="ff"><label>Company Name *</label><input id="aco-n" placeholder="e.g. Midlands Upholstery Ltd"></div>
+      <div class="ff"><label>Contact First Name</label><input id="aco-c" placeholder="e.g. Sarah"></div>
+      <div class="ff"><label>Email</label><input id="aco-e" placeholder="sarah@company.com"></div>
+      <div class="ff"><label>Phone</label><input id="aco-p" placeholder="0121 000 0000"></div>
+      <div class="ff"><label>Location / Town</label><input id="aco-l" placeholder="e.g. Birmingham"></div>
+      <div class="ff"><label>Industry Type</label><input id="aco-i" placeholder="e.g. Contract Upholstery"></div>
+    </div>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('addCoM')">Cancel</button><button class="btn btn-dark" onclick="addCo()">Add Company</button></div>
+  </div>
+</div>
+
+<!-- BULK COMPANIES -->
+<div class="mo hidden" id="bulkCoM">
+  <div class="modal">
+    <h2>Paste Company List</h2>
+    <p>One per line: <code style="font-size:11px;background:var(--warm-rule);padding:1px 4px;">Company Name, Contact, Email, Location</code></p>
+    <textarea id="bulk-co" placeholder="Chrysalis Clothes, Sharon, sharon@chrysalis.co.uk, Corby&#10;Northern Fabrics, James, james@nf.co.uk, Leeds"></textarea>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('bulkCoM')">Cancel</button><button class="btn btn-dark" onclick="importCos()">Import</button></div>
+  </div>
+</div>
+
+<!-- ADD SEWING CANDIDATE -->
+<div class="mo hidden" id="addSCM">
+  <div class="modal" style="max-width:620px;">
+    <h2>Add Sewing Candidate</h2>
+    <div class="fg">
+      <div class="ff"><label>Full Name *</label><input id="asc-name"></div>
+      <div class="ff"><label>Email</label><input id="asc-email" type="email"></div>
+      <div class="ff"><label>Phone</label><input id="asc-phone"></div>
+      <div class="ff"><label>Job Title / Role</label><input id="asc-role"></div>
+      <div class="ff"><label>City</label><input id="asc-city"></div>
+      <div class="ff"><label>Postcode</label><input id="asc-post"></div>
+      <div class="ff"><label>Years Experience</label><input id="asc-exp" type="number"></div>
+      <div class="ff"><label>Sector</label><input id="asc-sect"></div>
+      <div class="ff"><label>Work Type</label><select id="asc-wt"><option>Full Time</option><option>Part Time</option><option>Contract</option><option>Temporary</option></select></div>
+      <div class="ff"><label>Desired Salary (£/yr)</label><input id="asc-sal" type="number"></div>
+      <div class="ff"><label>Travel Distance (miles)</label><input id="asc-td" type="number"></div>
+      <div class="ff"><label>Status</label><select id="asc-status"><option>Active</option><option>Available</option><option>Notice Period</option><option>Placed</option><option>Inactive</option></select></div>
+      <div class="ff"><label>Availability</label><input id="asc-avail"></div>
+      <div class="ff"><label>Drivers Licence?</label><select id="asc-drv"><option>No</option><option>Yes</option></select></div>
+      <div class="ff"><label>Own Vehicle?</label><select id="asc-veh"><option>No</option><option>Yes</option></select></div>
+      <div class="ff"><label>Weekend Work?</label><select id="asc-wknd"><option>No</option><option>Limited</option><option>Yes</option></select></div>
+      <div class="ff"><label>Overtime?</label><select id="asc-ot"><option>No</option><option>If required</option><option>Yes</option></select></div>
+      <div class="ff full"><label>Machines Used</label><textarea rows="2" id="asc-machines"></textarea></div>
+      <div class="ff full"><label>Sewing Techniques</label><textarea rows="2" id="asc-tech"></textarea></div>
+      <div class="ff full"><label>Products Made</label><textarea rows="2" id="asc-prod"></textarea></div>
+      <div class="ff full"><label>Materials</label><textarea rows="2" id="asc-materials"></textarea></div>
+      <div class="ff full"><label>Additional Info</label><textarea rows="2" id="asc-info"></textarea></div>
+    </div>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('addSCM')">Cancel</button><button class="btn btn-dark" onclick="addSC()">Add Candidate</button></div>
+  </div>
+</div>
+
+<!-- ADD UPHOLSTERY CANDIDATE -->
+<div class="mo hidden" id="addUCM">
+  <div class="modal" style="max-width:620px;">
+    <h2>Add Upholstery Candidate</h2>
+    <div class="fg">
+      <div class="ff"><label>Full Name *</label><input id="auc-name"></div>
+      <div class="ff"><label>Email</label><input id="auc-email" type="email"></div>
+      <div class="ff"><label>Phone</label><input id="auc-phone"></div>
+      <div class="ff"><label>Job Title / Role</label><input id="auc-role"></div>
+      <div class="ff"><label>City</label><input id="auc-city"></div>
+      <div class="ff"><label>Postcode</label><input id="auc-post"></div>
+      <div class="ff"><label>Years Experience</label><input id="auc-exp" type="number"></div>
+      <div class="ff"><label>Sector</label><input id="auc-sect"></div>
+      <div class="ff"><label>Work Type</label><select id="auc-wt"><option>Full Time</option><option>Part Time</option><option>Contract</option><option>Temporary</option></select></div>
+      <div class="ff"><label>Desired Salary (£/yr)</label><input id="auc-sal" type="number"></div>
+      <div class="ff"><label>Travel Distance (miles)</label><input id="auc-td" type="number"></div>
+      <div class="ff"><label>Status</label><select id="auc-status"><option>Active</option><option>Available</option><option>Notice Period</option><option>Placed</option><option>Inactive</option></select></div>
+      <div class="ff"><label>Availability</label><input id="auc-avail"></div>
+      <div class="ff"><label>Drivers Licence?</label><select id="auc-drv"><option>No</option><option>Yes</option></select></div>
+      <div class="ff"><label>Own Vehicle?</label><select id="auc-veh"><option>No</option><option>Yes</option></select></div>
+      <div class="ff"><label>Sewing Machine Experience?</label><select id="auc-sme"><option>No</option><option>Yes</option></select></div>
+      <div class="ff"><label>Willing to Relocate?</label><select id="auc-reloc"><option>No</option><option>Yes</option><option>Maybe</option></select></div>
+      <div class="ff"><label>Weekend Work?</label><select id="auc-wknd"><option>No</option><option>Limited</option><option>Yes</option></select></div>
+      <div class="ff"><label>Overtime?</label><select id="auc-ot"><option>No</option><option>If required</option><option>Yes</option></select></div>
+      <div class="ff full"><label>Techniques</label><textarea rows="2" id="auc-tech"></textarea></div>
+      <div class="ff full"><label>Products Made</label><textarea rows="2" id="auc-prod"></textarea></div>
+      <div class="ff full"><label>Machines Used</label><textarea rows="2" id="auc-machines"></textarea></div>
+      <div class="ff full"><label>Additional Info</label><textarea rows="2" id="auc-info"></textarea></div>
+    </div>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('addUCM')">Cancel</button><button class="btn btn-dark" onclick="addUC()">Add Candidate</button></div>
+  </div>
+</div>
+
+<!-- PASTE IMPORT MODAL -->
+<div class="mo hidden" id="pasteImpM">
+  <div class="modal" style="max-width:580px;">
+    <h2>Import Candidate by Paste</h2>
+    <p>Paste a raw candidate profile. All fields will be extracted automatically — review before saving.</p>
+    <div id="paste-step1">
+      <textarea id="paste-raw" rows="12" placeholder="city&#10;Liverpool&#10;years_experience&#10;6-10 years&#10;machines&#10;Overlocker, Flatbed Lockstitch…&#10;availability&#10;Immediate"></textarea>
+      <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('pasteImpM')">Cancel</button><button class="btn btn-dark" onclick="doPasteExtract()">Extract & Review →</button></div>
+    </div>
+    <div id="paste-step2" class="hidden">
+      <div class="fg" id="paste-fields"></div>
+      <div class="modal-acts"><button class="btn btn-ghost" onclick="showPasteStep(1)">← Back</button><button class="btn btn-dark" onclick="savePasteImport()">Save Candidate</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- PASTE JOB MODAL -->
+<div class="mo hidden" id="pasteJobM">
+  <div class="modal" style="max-width:600px;">
+    <h2>Import Job from Paste</h2>
+    <p>Paste the raw job listing text from Indeed, LinkedIn, or any source. All fields will be extracted automatically.</p>
+    <div id="pastejob-step1">
+      <textarea id="pastejob-raw" rows="12" placeholder="NJC Thermal Covers (UK) Limited&#10;positionName&#10;Sewing Machinist&#10;location&#10;Liverpool L33 7TJ&#10;salary&#10;From £14 an hour&#10;description&#10;We are looking for a skilled..."></textarea>
+      <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('pasteJobM')">Cancel</button><button class="btn btn-dark" onclick="doPasteJobExtract()">Extract &amp; Review →</button></div>
+    </div>
+    <div id="pastejob-step2" class="hidden">
+      <div class="fg" id="pastejob-fields"></div>
+      <div class="modal-acts"><button class="btn btn-ghost" onclick="showPasteJobStep(1)">← Back</button><button class="btn btn-dark" onclick="savePasteJob()">Save Job</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD JOB MODAL -->
+<div class="mo hidden" id="addJobM">
+  <div class="modal" style="max-width:640px;">
+    <h2>Add Job Vacancy</h2>
+    <div class="fg">
+      <div class="ff"><label>Company *</label><select id="ajob-co"><option value="">— select —</option></select></div>
+      <div class="ff"><label>Position / Role *</label><input id="ajob-pos" placeholder="e.g. Experienced Bench Upholsterer"></div>
+      <div class="ff"><label>Location</label><input id="ajob-loc" placeholder="e.g. Bootle L30 4UA"></div>
+      <div class="ff"><label>Salary</label><input id="ajob-sal" placeholder="e.g. £12.21 - £20.84 an hour"></div>
+      <div class="ff"><label>Salary Min (£/hr or /yr)</label><input id="ajob-salmin" type="number" placeholder="12.21"></div>
+      <div class="ff"><label>Salary Max</label><input id="ajob-salmax" type="number" placeholder="20.84"></div>
+      <div class="ff"><label>Salary Period</label><select id="ajob-salper"><option value="hour">Per hour</option><option value="year">Per year</option><option value="day">Per day</option></select></div>
+      <div class="ff"><label>Job Type</label><select id="ajob-type"><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Temporary</option></select></div>
+      <div class="ff"><label>Hours per week</label><input id="ajob-hrs" placeholder="e.g. 40"></div>
+      <div class="ff"><label>Work Location</label><select id="ajob-wloc"><option>In person</option><option>Hybrid</option><option>Remote</option></select></div>
+      <div class="ff"><label>Experience Required</label><input id="ajob-exp" placeholder="e.g. 5 years"></div>
+      <div class="ff"><label>Candidate Pool</label><select id="ajob-pool"><option value="upholstery">Upholstery</option><option value="sewing">Sewing</option></select></div>
+      <div class="ff"><label>Source</label><input id="ajob-src" placeholder="e.g. Indeed, Direct, Referral"></div>
+      <div class="ff"><label>Application Email</label><input id="ajob-email" type="email" placeholder="e.g. accounts@njcthermal.co.uk"></div>
+      <div class="ff full"><label>Job Description</label><textarea rows="4" id="ajob-desc"></textarea></div>
+      <div class="ff full"><label>Requirements</label><textarea rows="2" id="ajob-req"></textarea></div>
+      <div class="ff full"><label>Benefits</label><textarea rows="2" id="ajob-ben"></textarea></div>
+    </div>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('addJobM')">Cancel</button><button class="btn btn-dark" onclick="addJob()">Add Job</button></div>
+  </div>
+</div>
+
+<!-- ADD SUBMISSION -->
+<div class="mo hidden" id="addSubM">
+  <div class="modal">
+    <h2>New Submission</h2>
+    <p>Link a candidate to a job vacancy and generate a tailored submission email.</p>
+    <div class="fg">
+      <div class="ff"><label>Candidate Pool</label><select id="sub-pool" onchange="populateSubCand()"><option value="sc">Sewing</option><option value="uc">Upholstery</option></select></div>
+      <div class="ff"><label>Candidate *</label><select id="sub-cand"><option value="">— select —</option></select></div>
+      <div class="ff full"><label>Company *</label><select id="sub-co" onchange="populateSubJobs()"><option value="">— select —</option></select></div>
+      <div class="ff full"><label>Job Vacancy (optional)</label><select id="sub-job"><option value="">— select job or leave blank —</option></select></div>
+      <div class="ff full"><label>Role (if not linked to a job)</label><input id="sub-role" placeholder="e.g. Sewing Machinist"></div>
+      <div class="ff full"><label>Notes</label><textarea id="sub-notes" rows="2"></textarea></div>
+    </div>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('addSubM')">Cancel</button><button class="btn btn-dark" onclick="addSub()">Create Submission</button></div>
+  </div>
+</div>
+
+<!-- ADD PLACEMENT -->
+<div class="mo hidden" id="addPlacM">
+  <div class="modal">
+    <h2>Add Placement to Pipeline</h2>
+    <p>Track this candidate's 13-week temp-to-perm journey.</p>
+    <div class="fg">
+      <div class="ff"><label>Candidate</label><select id="plac-cand"></select></div>
+      <div class="ff"><label>Company</label><select id="plac-co"></select></div>
+      <div class="ff"><label>Start Date</label><input id="plac-start" type="date"></div>
+      <div class="ff"><label>Weekly Charge Rate (£)</label><input id="plac-rate" type="number" placeholder="e.g. 722.07"></div>
+      <div class="ff full"><label>Role / Notes</label><input id="plac-role" placeholder="e.g. Sewing Machinist — luxury outerwear"></div>
+    </div>
+    <div class="modal-acts"><button class="btn btn-ghost" onclick="cm('addPlacM')">Cancel</button><button class="btn btn-primary" onclick="addPlacement()">Add to Pipeline</button></div>
+  </div>
+</div>
+
+<script>
+// ── Supabase client (auth-aware) ─────────────────────────────────────────
+let SB_URL='',SB_KEY='';
+let _sbClient=null;
+let _authToken='';
+
+function getSBClient(){
+  if(!_sbClient&&SB_URL&&SB_KEY){
+    _sbClient=supabase.createClient(SB_URL,SB_KEY);
+  }
+  return _sbClient;
+}
+
+const sbH=()=>({
+  apikey:SB_KEY,
+  Authorization:`Bearer ${_authToken||SB_KEY}`,
+  'Content-Type':'application/json'
+});
+
+const db={
+  async get(t,q=''){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?${q}&order=created_at.desc`,{headers:sbH()});return await r.json();}catch(e){return[];}},
+  async insert(t,d){try{const r=await fetch(`${SB_URL}/rest/v1/${t}`,{method:'POST',headers:{...sbH(),Prefer:'return=representation'},body:JSON.stringify(d)});return await r.json();}catch(e){return null;}},
+  async update(t,d,id){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?id=eq.${id}`,{method:'PATCH',headers:{...sbH(),Prefer:'return=representation'},body:JSON.stringify(d)});return await r.json();}catch(e){return null;}},
+  async del(t,id){try{const r=await fetch(`${SB_URL}/rest/v1/${t}?id=eq.${id}`,{method:'DELETE',headers:sbH()});return r.ok;}catch(e){return false;}}
+};
+// ── Data ─────────────────────────────────────────────────────────────────
+let companies=[],sewingC=[],upholstC=[],placements=[],submissions=[],jobs=[];
+
+async function loadAll(){
+  try{
+    [companies,sewingC,upholstC,placements,submissions,jobs]=await Promise.all([
+      db.get('sw_companies'),
+      db.get('sw_sewing_candidates'),
+      db.get('sw_upholstery_candidates'),
+      db.get('sw_placements'),
+      db.get('sw_submissions'),
+      db.get('sw_jobs')
+    ]);
+    submissions=submissions.map(s=>({...s,
+      cand_name:(s.cand_type==='sc'?sewingC:upholstC).find(x=>x.id===s.cand_id)?.full_name||'',
+      cand_role:(s.cand_type==='sc'?sewingC:upholstC).find(x=>x.id===s.cand_id)?.job_title||'',
+      co_name:companies.find(x=>x.id===s.co_id)?.name||'',
+      job_title:jobs.find(x=>x.id===s.job_id)?.position_name||''
+    }));
+    renderAll();
+    setSyncStatus(true);
+  }catch(e){setSyncStatus(false);}
+}
+function setSyncStatus(ok){
+  const d=document.getElementById('sync-dot'),h=document.getElementById('hdr-right');
+  if(d)d.className='sync-dot'+(ok?'':' off');
+  if(h)h.innerHTML=ok?`ryan.s@stitchway.site &nbsp;·&nbsp; 0116 298 5475<br>Specialist Textile &amp; Upholstery Recruitment`:`<span style="color:var(--coral);">Offline — check connection</span>`;
+}
+function renderAll(){renderDash();renderCos();renderJobs();renderSC();renderUC();renderSubs();}
+// ── Setup ────────────────────────────────────────────────────────────────
+const SQL=`create table if not exists sw_companies(id uuid primary key default gen_random_uuid(),name text not null,contact text,email text,phone text,loc text,ind text,stage text default 'New Lead',notes text,log jsonb default '[]',created_at timestamptz default now());
+create table if not exists sw_sewing_candidates(id uuid primary key default gen_random_uuid(),full_name text not null,email text,phone text,job_title text,city text,postcode text,years_experience text,sector text,work_type text,desired_salary text,travel_distance text,open_to_relocation text,drivers_license text,own_vehicle text,machines text,products text,materials text,sewing_techniques text,status text default 'Active',availability text,weekend_work text,overtime text,additional_info text,source text,log jsonb default '[]',created_at timestamptz default now());
+create table if not exists sw_upholstery_candidates(id uuid primary key default gen_random_uuid(),full_name text not null,email text,phone text,job_title text,city text,postcode text,years_experience text,sector text,work_type text,desired_salary text,travel_distance text,products text,techniques text,sewing_machine_experience text,sewing_machines_used text,willing_to_relocate text,status text default 'Active',availability text,drivers_license text,own_vehicle text,weekend_work text,overtime text,additional_info text,source text,log jsonb default '[]',created_at timestamptz default now());
+create table if not exists sw_placements(id uuid primary key default gen_random_uuid(),cand_id uuid,cand_name text,cand_type text,co_id uuid,co_name text,start_date text,weekly_rate numeric default 722.07,role text,status text default 'Active',created_at timestamptz default now());
+create table if not exists sw_submissions(id uuid primary key default gen_random_uuid(),cand_id uuid,cand_type text,co_id uuid,role text,status text default 'Pending',notes text,email_sent boolean default false,created_at timestamptz default now());`;
+
+function initApp(){
+  const stored=localStorage.getItem('sw6_creds');
+  if(!stored){
+    // First time — show setup screen to get Supabase credentials
+    document.getElementById('setup-sql-box').textContent=SQL;
+    document.getElementById('setup-screen').classList.remove('hidden');
+    return;
+  }
+  try{
+    const c=JSON.parse(stored);
+    if(c.url&&c.key){
+      SB_URL=c.url;SB_KEY=c.key;
+      _sbClient=null; // reset so getSBClient() rebuilds with new creds
+      // Check for existing session
+      const client=getSBClient();
+      client.auth.getSession().then(({data:{session}})=>{
+        if(session){
+          _authToken=session.access_token;
+          launchApp();
+        } else {
+          showLogin();
+        }
+      });
+      return;
+    }
+  }catch(e){}
+  document.getElementById('setup-sql-box').textContent=SQL;
+  document.getElementById('setup-screen').classList.remove('hidden');
+}
+
+async function doConnect(){
+  const url=document.getElementById('su-url').value.trim();
+  const key=document.getElementById('su-key').value.trim();
+  const err=document.getElementById('su-err');
+  const ok=document.getElementById('su-ok');
+  const btn=document.getElementById('su-connect-btn');
+  err.classList.add('hidden');ok.classList.add('hidden');
+  if(!url||!key){
+    err.textContent='Please enter both your Project URL and API key.';
+    err.classList.remove('hidden');return;
+  }
+  if(!url.includes('supabase.co')){
+    err.textContent="That doesn't look like a Supabase URL. It should end in .supabase.co";
+    err.classList.remove('hidden');return;
+  }
+  if(!key.startsWith('eyJ')){
+    err.textContent="That doesn't look like a valid API key. It should start with eyJ...";
+    err.classList.remove('hidden');return;
+  }
+  btn.textContent='Testing connection…';btn.disabled=true;
+  try{
+    const r=await fetch(`${url}/rest/v1/sw_companies?limit=1`,{headers:{apikey:key,Authorization:`Bearer ${key}`}});
+    if(r.ok||r.status===406||r.status===401){
+      localStorage.setItem('sw6_creds',JSON.stringify({url,key}));
+      SB_URL=url;SB_KEY=key;_sbClient=null;
+      ok.classList.remove('hidden');
+      btn.textContent='✓ Connected — Continue →';
+      setTimeout(()=>{
+        // Move to SQL confirmation step
+        document.getElementById('setup-step1').classList.add('hidden');
+        document.getElementById('setup-step2').classList.remove('hidden');
+        document.getElementById('setup-sql-box2').textContent=SQL;
+        document.getElementById('sp1').style.color='rgba(255,255,255,0.25)';
+        document.getElementById('sp1').style.borderBottomColor='transparent';
+        document.getElementById('sp2').style.color='var(--coral)';
+        document.getElementById('sp2').style.borderBottomColor='var(--coral)';
+      },900);
+    } else {
+      err.textContent='Could not connect — check your Project URL and API key are correct.';
+      err.classList.remove('hidden');
+      btn.textContent='Test Connection & Continue →';btn.disabled=false;
+    }
+  }catch(e){
+    err.textContent='Connection failed. Check your Supabase Project URL is correct and try again.';
+    err.classList.remove('hidden');
+    btn.textContent='Test Connection & Continue →';btn.disabled=false;
+  }
+}
+
+function clearSetupErr(){
+  document.getElementById('su-err')?.classList.add('hidden');
+  document.getElementById('su-ok')?.classList.add('hidden');
+  const btn=document.getElementById('su-connect-btn');
+  if(btn){btn.textContent='Test Connection & Continue →';btn.disabled=false;}
+}
+
+function toggleKeyVis(){
+  const inp=document.getElementById('su-key');
+  const eye=document.getElementById('key-eye');
+  if(inp.type==='password'){inp.type='text';eye.textContent='🙈';}
+  else{inp.type='password';eye.textContent='👁';}
+}
+
+function setupBack(){
+  document.getElementById('setup-step2').classList.add('hidden');
+  document.getElementById('setup-step1').classList.remove('hidden');
+  document.getElementById('sp2').style.color='rgba(255,255,255,0.25)';
+  document.getElementById('sp2').style.borderBottomColor='transparent';
+  document.getElementById('sp1').style.color='var(--coral)';
+  document.getElementById('sp1').style.borderBottomColor='var(--coral)';
+}
+
+function setupNext(){
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('sp2').style.color='rgba(255,255,255,0.25)';
+  document.getElementById('sp2').style.borderBottomColor='transparent';
+  document.getElementById('sp3').style.color='var(--coral)';
+  document.getElementById('sp3').style.borderBottomColor='var(--coral)';
+  showLogin();
+}
+
+function showLogin(){
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('app-shell').classList.add('hidden');
+  setTimeout(()=>document.getElementById('login-email').focus(),100);
+}
+
+function showSetup(){
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('setup-sql-box').textContent=SQL;
+  // Reset to step 1
+  document.getElementById('setup-step1').classList.remove('hidden');
+  document.getElementById('setup-step2').classList.add('hidden');
+  ['sp1','sp2','sp3'].forEach((id,i)=>{
+    const el=document.getElementById(id);
+    if(el){el.style.color=i===0?'var(--coral)':'rgba(255,255,255,0.25)';el.style.borderBottomColor=i===0?'var(--coral)':'transparent';}
+  });
+  const btn=document.getElementById('su-connect-btn');
+  if(btn){btn.textContent='Test Connection & Continue →';btn.disabled=false;}
+  document.getElementById('setup-screen').classList.remove('hidden');
+}
+
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const pw=document.getElementById('login-pw').value;
+  if(!email||!pw)return;
+  const btn=document.getElementById('login-btn');
+  const err=document.getElementById('login-err');
+  btn.textContent='Signing in…';btn.disabled=true;err.classList.add('hidden');
+  try{
+    const client=getSBClient();
+    const {data,error}=await client.auth.signInWithPassword({email,password:pw});
+    if(error){
+      err.textContent=error.message==='Invalid login credentials'
+        ?'Incorrect email or password. Check your details and try again.'
+        :error.message;
+      err.classList.remove('hidden');
+      btn.textContent='Sign In';btn.disabled=false;
+      return;
+    }
+    _authToken=data.session.access_token;
+    document.getElementById('login-screen').classList.add('hidden');
+    launchApp();
+  }catch(e){
+    err.textContent='Sign in failed — check your connection.';
+    err.classList.remove('hidden');
+    btn.textContent='Sign In';btn.disabled=false;
+  }
+}
+
+async function doSignOut(){
+  try{
+    const client=getSBClient();
+    await client.auth.signOut();
+  }catch(e){}
+  _authToken='';
+  document.getElementById('app-shell').classList.add('hidden');
+  showLogin();
+  toast('Signed out');
+}
+
+async function launchApp(){
+  document.getElementById('setup-screen').classList.add('hidden');
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('app-shell').classList.remove('hidden');
+  SW('dash'); // Show dash immediately so layout is visible while data loads
+  // Keep session token refreshed
+  const client=getSBClient();
+  client.auth.onAuthStateChange((event,session)=>{
+    if(session)_authToken=session.access_token;
+    if(event==='SIGNED_OUT'){showLogin();}
+  });
+  await loadAll();
+}
+function copySQL(){navigator.clipboard.writeText(SQL).then(()=>toast('SQL copied ✓'));}
+// ── Constants & utils ────────────────────────────────────────────────────
+const CO_STAGES=['New Lead','Outreach Sent','Follow-Up','CV Submitted','Interview','Offer/Placed','Rejected'];
+const CO_COL={'New Lead':'#3D6B4F','Outreach Sent':'#B8870A','Follow-Up':'#DA4C3F','CV Submitted':'#3A6A9A','Interview':'#6A4A8A','Offer/Placed':'#1a5a3a','Rejected':'#888'};
+const CAND_STATUSES=['Active','Available','Busy','Notice Period','Employed - Open to Offers','Placed','Inactive'];
+const CAND_COL={'Active':'#3A6A9A','Available':'#3D6B4F','Busy':'#7B5EA7','Notice Period':'#B8870A','Employed - Open to Offers':'#1A7A6E','Placed':'#6A4A8A','Inactive':'#aaa'};
+const SUB_COL={'Pending':'#B8870A','Sent':'#3A6A9A','Interview':'#6A4A8A','Placed':'#3D6B4F','Rejected':'#888'};
+
+function esc(s){return(s||'').toString().replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function om(id){document.getElementById(id).classList.remove('hidden');}
+function cm(id){document.getElementById(id).classList.add('hidden');}
+function _v(id){return document.getElementById(id)?.value?.trim()||'';}
+function nowStr(){return new Date().toLocaleString('en-GB');}
+function toast(msg,col){
+  const t=document.getElementById('toast');
+  t.style.borderLeftColor=col||'#DA4C3F';t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2800);
+}
+function weeksElapsed(s){if(!s)return 0;return Math.min(Math.floor((Date.now()-new Date(s).getTime())/(7*86400000)),13);}
+
+let sel={co:null,sc:null,uc:null},flt={co:'all',sc:'all',uc:'all'};
+let activeTpl='outreach',composeCtx=null,activeTab='co';
+let aiSelCand=null,aiSelPool=null,_aiCo=null,_aiCand=null,_aiSubId=null;
+let pasteType='sc',pasteData={};
+
+// ── Nav ──────────────────────────────────────────────────────────────────
+function SW(tab){
+  activeTab=tab;
+  ['dash','co','jobs','sc','uc','subs','match','pipeline'].forEach(t=>{
+    const v=document.getElementById('view-'+t);
+    const isBlock=['match','pipeline','subs','jobs','dash'].includes(t);
+    if(v){v.classList.remove('hidden');v.style.display=t===tab?(isBlock?'block':'flex'):'none';}
+    document.getElementById('tab-'+t)?.classList.toggle('on',t===tab);
+  });
+  if(tab==='match')popMatchDrop();
+  if(tab==='pipeline')renderPipeline();
+  if(tab==='subs'){populateSubDrop();renderSubs();}
+  if(tab==='jobs'){populateJobCoDropdown();renderJobs();}
+  if(tab==='dash')renderDash();
+}
+function setF(type,val,btn){
+  flt[type]=val;
+  document.querySelectorAll(`#${type}-flt .fb`).forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  if(type==='co')renderCos();else if(type==='sc')renderSC();else renderUC();
+}
+// ── Log helper ───────────────────────────────────────────────────────────
+function renderLog(entity,type){
+  const log=entity.log||[];
+  if(!log.length)return'<div style="font-size:11px;color:#bbb;padding:8px 0;">No updates yet.</div>';
+  return log.slice().reverse().map((e,i)=>{
+    const ri=log.length-1-i;
+    const cls=(e.text||'').startsWith('✉')?'email-log':e.type==='update'?'update-log':'';
+    return`<div class="log-item ${cls}"><button class="log-del" onclick="delLog('${entity.id}','${type}',${ri})">✕</button><div class="log-dt">${e.date}</div>${esc(e.text)}</div>`;
+  }).join('');
+}
+async function addLog(type){
+  const inputId=type+'-log-in';
+  const txt=document.getElementById(inputId)?.value.trim();if(!txt)return;
+  const tbl=type==='co'?'sw_companies':type==='sc'?'sw_sewing_candidates':'sw_upholstery_candidates';
+  const arr=type==='co'?companies:type==='sc'?sewingC:upholstC;
+  const entity=arr.find(x=>x.id===sel[type]);if(!entity)return;
+  entity.log=entity.log||[];entity.log.push({date:nowStr(),text:txt,type:'update'});
+  await db.update(tbl,{log:entity.log},entity.id);
+  document.getElementById(inputId).value='';
+  document.getElementById(type+'-log').innerHTML=renderLog(entity,type);
+  toast('Update saved ✓');
+}
+async function delLog(id,type,idx){
+  const tbl=type==='co'?'sw_companies':type==='sc'?'sw_sewing_candidates':'sw_upholstery_candidates';
+  const arr=type==='co'?companies:type==='sc'?sewingC:upholstC;
+  const e=arr.find(x=>x.id===id);if(!e)return;
+  e.log=e.log||[];e.log.splice(idx,1);
+  await db.update(tbl,{log:e.log},e.id);
+  document.getElementById(type+'-log').innerHTML=renderLog(e,type);
+}
+// ── Companies ────────────────────────────────────────────────────────────
+async function addCo(){
+  const n=_v('aco-n');if(!n){alert('Company name required');return;}
+  const res=await db.insert('sw_companies',{name:n,contact:_v('aco-c'),email:_v('aco-e'),phone:_v('aco-p'),loc:_v('aco-l'),ind:_v('aco-i'),stage:'New Lead',notes:'',log:[]});
+  if(res&&res[0]){companies.unshift(res[0]);cm('addCoM');['aco-n','aco-c','aco-e','aco-p','aco-l','aco-i'].forEach(id=>document.getElementById(id).value='');renderCos();selCo(res[0].id);toast('Company added ✓');}
+}
+async function importCos(){
+  const lines=_v('bulk-co').split('\n').filter(l=>l.trim());let n=0;
+  for(const line of lines){const p=line.split(',').map(s=>s.trim());if(!p[0])continue;const res=await db.insert('sw_companies',{name:p[0],contact:p[1]||'',email:p[2]||'',phone:'',loc:p[3]||'',ind:'',stage:'New Lead',notes:'',log:[]});if(res&&res[0]){companies.unshift(res[0]);n++;}}
+  document.getElementById('bulk-co').value='';cm('bulkCoM');renderCos();toast(`${n} companies imported ✓`);
+}
+function renderCos(){
+  const q=(document.getElementById('co-srch')?.value||'').toLowerCase();
+  const f=companies.filter(c=>(!q||c.name.toLowerCase().includes(q)||(c.contact||'').toLowerCase().includes(q)||(c.loc||'').toLowerCase().includes(q))&&(flt.co==='all'||c.stage===flt.co));
+  document.getElementById('co-cnt').textContent=`(${companies.length})`;
+  const list=document.getElementById('co-list');list.innerHTML='';
+  if(!f.length){list.innerHTML='<div style="padding:16px;text-align:center;font-size:11px;color:#bbb;">No results</div>';return;}
+  f.forEach(c=>{const d=document.createElement('div');d.className='item'+(c.id===sel.co?' on':'');d.onclick=()=>selCo(c.id);d.innerHTML=`<div class="item-name">${esc(c.name)}</div><div class="item-sub">${esc(c.contact||'—')}${c.loc?' · '+esc(c.loc):''}</div><span class="badge" style="background:${CO_COL[c.stage]||'#888'}">${c.stage}</span>`;list.appendChild(d);});
+}
+function selCo(id){sel.co=id;renderCos();renderCoDet();}
+
+function renderCoDet(){
+  const c=companies.find(x=>x.id===sel.co);if(!c)return;
+  document.getElementById('co-es').classList.add('hidden');
+  const el=document.getElementById('co-det');el.classList.remove('hidden');
+  const tpl=TEMPLATES.find(t=>t.id===activeTpl)||TEMPLATES[0];
+  el.innerHTML=`<div class="det">
+  <div class="det-hd">
+    <div><div class="det-name">${esc(c.name)}</div><div class="det-meta">Added ${c.created_at?new Date(c.created_at).toLocaleDateString('en-GB'):'—'} · ${esc(c.loc||'Location not set')}${c.ind?' · '+esc(c.ind):''}</div></div>
+    <div class="det-acts">
+      <button class="btn btn-ai" onclick="openAIGen()">✦ AI Email</button>
+      <button class="btn btn-primary" onclick="openSubFromCo()">+ Submit Candidate</button>
+      <button class="btn btn-danger" onclick="delCo('${c.id}')">Delete</button>
+    </div>
+  </div>
+  <div class="stages">${CO_STAGES.map(s=>`<button class="stage-pill${c.stage===s?' on':''}" style="${c.stage===s?'background:'+CO_COL[s]+';border-color:'+CO_COL[s]:''}" onclick="setCoStage('${s}')">${s}</button>`).join('')}</div>
+  <div class="fg">
+    <div class="ff"><label>Company Name</label><input value="${esc(c.name)}" oninput="upCo('name',this.value)"></div>
+    <div class="ff"><label>Contact Name</label><input value="${esc(c.contact||'')}" oninput="upCo('contact',this.value)"></div>
+    <div class="ff"><label>Email</label><input value="${esc(c.email||'')}" oninput="upCo('email',this.value)"></div>
+    <div class="ff"><label>Phone</label><input value="${esc(c.phone||'')}" oninput="upCo('phone',this.value)"></div>
+    <div class="ff"><label>Location</label><input value="${esc(c.loc||'')}" oninput="upCo('loc',this.value)"></div>
+    <div class="ff"><label>Industry Type</label><input value="${esc(c.ind||'')}" oninput="upCo('ind',this.value)"></div>
+    <div class="ff full"><label>Notes</label><textarea rows="2" oninput="upCo('notes',this.value)">${esc(c.notes||'')}</textarea></div>
+  </div>
+  <hr class="dv">
+  <div class="sec">Updates & Activity Log</div>
+  <div id="co-log">${renderLog(c,'co')}</div>
+  <div class="log-add"><textarea id="co-log-in" placeholder="Log a call, note, or update…"></textarea><button class="log-btn" onclick="addLog('co')">+ Add</button></div>
+  <hr class="dv">
+  <div class="sec">Email Templates</div>
+  <div class="tpl-tabs">${TEMPLATES.map(t=>`<button class="tpl-tab${t.id===activeTpl?' on':''}" onclick="setTpl('${t.id}')">${t.label}</button>`).join('')}</div>
+  <div class="tpl-box">
+    <div class="tpl-hd">
+      <div><div class="tpl-ttl">${tpl.title}</div><div class="tpl-when">When: ${tpl.when}</div></div>
+      <div class="tpl-acts">
+        <button class="btn btn-ghost" id="co-copy" style="font-size:10px;padding:4px 10px;" onclick="copyTpl()">Copy</button>
+        <button class="btn btn-primary" style="font-size:10px;padding:4px 10px;" onclick="openCompose('co')">✉ Compose</button>
+      </div>
+    </div>
+    <div class="tpl-subj"><strong>Subject:</strong> ${esc(tpl.subject(c))}</div>
+    <div class="tpl-body">${tpl.body(c).replace(/\[([^\]]+)\]/g,'<span class="ph">[$1]</span>')}</div>
+    <div class="tpl-ai-row"><span class="tpl-ai-note">Want a tailored intro for a specific candidate?</span><button class="btn btn-ai" style="font-size:10px;padding:4px 12px;" onclick="openAIGen()">✦ Generate with AI</button></div>
+  </div>
+</div>`;
+}
+
+let _coT={};
+async function setCoStage(s){const c=companies.find(x=>x.id===sel.co);if(!c)return;c.stage=s;await db.update('sw_companies',{stage:s},c.id);renderCos();renderCoDet();}
+function upCo(f,v){const c=companies.find(x=>x.id===sel.co);if(!c)return;c[f]=v;clearTimeout(_coT[f]);_coT[f]=setTimeout(()=>db.update('sw_companies',{[f]:v},c.id),800);if(f==='name'){document.querySelector('#co-det .det-name').textContent=v;renderCos();}}
+async function delCo(id){if(!confirm('Delete this company?'))return;await db.del('sw_companies',id);companies=companies.filter(x=>x.id!==id);sel.co=null;renderCos();document.getElementById('co-det').classList.add('hidden');document.getElementById('co-es').classList.remove('hidden');}
+// ── Sewing Candidates ────────────────────────────────────────────────────
+async function addSC(){
+  const name=_v('asc-name');if(!name){alert('Name required');return;}
+  const d={full_name:name,email:_v('asc-email'),phone:_v('asc-phone'),job_title:_v('asc-role'),city:_v('asc-city'),postcode:_v('asc-post'),years_experience:_v('asc-exp'),sector:_v('asc-sect'),work_type:document.getElementById('asc-wt').value,desired_salary:_v('asc-sal'),travel_distance:_v('asc-td'),status:document.getElementById('asc-status').value,availability:_v('asc-avail'),drivers_license:document.getElementById('asc-drv').value,own_vehicle:document.getElementById('asc-veh').value,weekend_work:document.getElementById('asc-wknd').value,overtime:document.getElementById('asc-ot').value,machines:_v('asc-machines'),sewing_techniques:_v('asc-tech'),products:_v('asc-prod'),materials:_v('asc-materials'),additional_info:_v('asc-info'),log:[]};
+  const res=await db.insert('sw_sewing_candidates',d);
+  if(res&&res[0]){sewingC.unshift(res[0]);cm('addSCM');renderSC();selSC(res[0].id);toast('Sewing candidate added ✓');}
+}
+function renderSC(){
+  const q=(document.getElementById('sc-srch')?.value||'').toLowerCase();
+  const f=sewingC.filter(c=>(!q||(c.full_name||'').toLowerCase().includes(q)||(c.job_title||'').toLowerCase().includes(q)||(c.city||'').toLowerCase().includes(q)||(c.machines||'').toLowerCase().includes(q)||(c.sewing_techniques||'').toLowerCase().includes(q))&&(flt.sc==='all'||c.status===flt.sc));
+  document.getElementById('sc-cnt').textContent=`(${sewingC.length})`;
+  const list=document.getElementById('sc-list');list.innerHTML='';
+  if(!f.length){list.innerHTML='<div style="padding:16px;text-align:center;font-size:11px;color:#bbb;">No results</div>';return;}
+  f.forEach(c=>{const d=document.createElement('div');d.className='item'+(c.id===sel.sc?' on':'');d.onclick=()=>selSC(c.id);d.innerHTML=`<div class="item-name">${esc(c.full_name)}</div><div class="item-sub">${esc(c.job_title||'—')}${c.city?' · '+esc(c.city):''}</div><span class="badge" style="background:${CAND_COL[c.status]||'#888'}">${c.status||'Active'}</span>`;list.appendChild(d);});
+}
+function selSC(id){sel.sc=id;renderSC();renderSCDet();}
+function renderSCDet(){
+  const c=sewingC.find(x=>x.id===sel.sc);if(!c)return;
+  document.getElementById('sc-es').classList.add('hidden');
+  const el=document.getElementById('sc-det');el.classList.remove('hidden');
+  const cidBadge=c.candidate_id?`<span style="font-size:10px;background:#EBF2FA;color:#3A6A9A;padding:1px 7px;border-radius:3px;margin-right:8px;">${esc(c.candidate_id)}</span>`:'';
+  el.innerHTML=`<div class="det">
+  <div class="det-hd">
+    <div><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#3A6A9A;margin-bottom:6px;">🧵 Sewing Candidate</div><div class="det-name">${esc(c.full_name)}</div><div class="det-meta">${cidBadge}Added ${c.created_at?new Date(c.created_at).toLocaleDateString('en-GB'):'—'} · ${esc(c.city||'Location not set')}${c.postcode?' ('+esc(c.postcode)+')':''}</div></div>
+    <div class="det-acts"><button class="btn btn-ai" onclick="openSubFromCand('sc','${c.id}')">+ Submit</button><button class="btn btn-blue" onclick="openCompose('sc')">✉ Email</button><button class="btn btn-danger" onclick="delCand('sc','${c.id}')">Delete</button></div>
+  </div>
+  <div class="stages">${CAND_STATUSES.map(s=>`<button class="stage-pill${c.status===s?' on':''}" style="${c.status===s?'background:'+CAND_COL[s]+';border-color:'+CAND_COL[s]:''}" onclick="setCandStatus('sc','${s}')">${s}</button>`).join('')}</div>
+  <div class="sec">Personal Details</div>
+  <div class="fg">
+    <div class="ff"><label>Full Name</label><input value="${esc(c.full_name)}" oninput="upC('sc','full_name',this.value)"></div>
+    <div class="ff"><label>Email</label><input value="${esc(c.email||'')}" oninput="upC('sc','email',this.value)"></div>
+    <div class="ff"><label>Phone</label><input value="${esc(c.phone||'')}" oninput="upC('sc','phone',this.value)"></div>
+    <div class="ff"><label>Job Title</label><input value="${esc(c.job_title||'')}" oninput="upC('sc','job_title',this.value)"></div>
+    <div class="ff"><label>City</label><input value="${esc(c.city||'')}" oninput="upC('sc','city',this.value)"></div>
+    <div class="ff"><label>Postcode</label><input value="${esc(c.postcode||'')}" oninput="upC('sc','postcode',this.value)"></div>
+    <div class="ff"><label>Candidate ID</label><input value="${esc(c.candidate_id||'')}" oninput="upC('sc','candidate_id',this.value)" placeholder="e.g. SEW-917872"></div>
+    <div class="ff"><label>Profile Status</label><select onchange="upC('sc','profile_status',this.value)">${['Pending','Active','Approved','Rejected'].map(s=>`<option${c.profile_status===s?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="ff"><label>Source</label><input value="${esc(c.source||'')}" oninput="upC('sc','source',this.value)"></div>
+    <div class="ff"><label>Submission Date</label><input value="${esc(c.submission_date||'')}" oninput="upC('sc','submission_date',this.value)"></div>
+  </div>
+  <div class="sec">Work Preferences</div>
+  <div class="fg">
+    <div class="ff"><label>Years Experience</label><input value="${esc(c.years_experience||'')}" oninput="upC('sc','years_experience',this.value)"></div>
+    <div class="ff"><label>Sector</label><input value="${esc(c.sector||'')}" oninput="upC('sc','sector',this.value)"></div>
+    <div class="ff"><label>Work Type</label><input value="${esc(c.work_type||'')}" oninput="upC('sc','work_type',this.value)"></div>
+    <div class="ff"><label>Desired Salary</label><input value="${esc(c.desired_salary||'')}" oninput="upC('sc','desired_salary',this.value)"></div>
+    <div class="ff"><label>Travel Distance</label><input value="${esc(c.travel_distance||'')}" oninput="upC('sc','travel_distance',this.value)"></div>
+    <div class="ff"><label>Availability</label><input value="${esc(c.availability||'')}" oninput="upC('sc','availability',this.value)"></div>
+    <div class="ff"><label>Open to Relocation?</label><input value="${esc(c.open_to_relocation||'')}" oninput="upC('sc','open_to_relocation',this.value)"></div>
+    <div class="ff"><label>Drivers Licence?</label><input value="${esc(c.drivers_license||'')}" oninput="upC('sc','drivers_license',this.value)"></div>
+    <div class="ff"><label>Own Vehicle?</label><input value="${esc(c.own_vehicle||'')}" oninput="upC('sc','own_vehicle',this.value)"></div>
+    <div class="ff"><label>Weekend Work?</label><input value="${esc(c.weekend_work||'')}" oninput="upC('sc','weekend_work',this.value)"></div>
+    <div class="ff"><label>Overtime?</label><input value="${esc(c.overtime||'')}" oninput="upC('sc','overtime',this.value)"></div>
+  </div>
+  <div class="sec">Skills &amp; Experience</div>
+  <div class="fg">
+    <div class="ff full"><label>Machines Used</label><textarea rows="2" oninput="upC('sc','machines',this.value)">${esc(c.machines||'')}</textarea></div>
+    <div class="ff full"><label>Sewing Techniques</label><textarea rows="2" oninput="upC('sc','sewing_techniques',this.value)">${esc(c.sewing_techniques||'')}</textarea></div>
+    <div class="ff full"><label>Products Made</label><textarea rows="2" oninput="upC('sc','products',this.value)">${esc(c.products||'')}</textarea></div>
+    <div class="ff full"><label>Materials</label><textarea rows="2" oninput="upC('sc','materials',this.value)">${esc(c.materials||'')}</textarea></div>
+    <div class="ff full"><label>Additional Info</label><textarea rows="2" oninput="upC('sc','additional_info',this.value)">${esc(c.additional_info||'')}</textarea></div>
+  </div>
+  <div class="sec">Consent</div>
+  <div class="fg">
+    <div class="ff"><label>Processing</label><select onchange="upC('sc','consent_processing',this.value)">${['No','Yes'].map(v=>`<option${c.consent_processing===v?' selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="ff"><label>Storage</label><select onchange="upC('sc','consent_storage',this.value)">${['No','Yes'].map(v=>`<option${c.consent_storage===v?' selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="ff"><label>Contact</label><select onchange="upC('sc','consent_contact',this.value)">${['No','Yes'].map(v=>`<option${c.consent_contact===v?' selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="ff"><label>Marketing</label><select onchange="upC('sc','consent_marketing',this.value)">${['No','Yes'].map(v=>`<option${c.consent_marketing===v?' selected':''}>${v}</option>`).join('')}</select></div>
+  </div>
+  <hr class="dv">
+  <div class="sec">Updates &amp; Notes</div>
+  <div id="sc-log">${renderLog(c,'sc')}</div>
+  <div class="log-add"><textarea id="sc-log-in" placeholder="Add a call note, interview feedback, update…"></textarea><button class="log-btn" onclick="addLog('sc')">+ Add</button></div>
+  <hr class="dv">
+  <div class="sec">Submission History</div>
+  <div>${(()=>{const subs=submissions.filter(s=>s.cand_id===c.id);if(!subs.length)return '<div style="color:#9A9490;font-size:12px;padding:4px 0;">No submissions yet.</div>';const SUB_C={'Pending':'#B8870A','Sent':'#3A6A9A','Interview':'#6A4A8A','Placed':'#3D6B4F','Rejected':'#DA4C3F'};return subs.map(s=>`<div style="padding:8px 12px;margin-bottom:5px;background:#FAF8F5;border-left:3px solid ${SUB_C[s.status]||'#3A6A9A'};display:flex;align-items:center;justify-content:space-between;"><div style="font-size:12px;"><strong>${esc(s.co_name||'—')}</strong>${s.job_title?' · '+esc(s.job_title):s.role?' · '+esc(s.role):''}<div style="font-size:10px;color:#9A9490;margin-top:2px;">${s.created_at?new Date(s.created_at).toLocaleDateString('en-GB'):'—'}</div></div><span class="badge" style="background:${SUB_C[s.status]||'#3A6A9A'}">${s.status}</span></div>`).join('');})()}</div>
+</div>`;
+}
+// ── Upholstery Candidates ────────────────────────────────────────────────
+async function addUC(){
+  const name=_v('auc-name');if(!name){alert('Name required');return;}
+  const d={full_name:name,email:_v('auc-email'),phone:_v('auc-phone'),job_title:_v('auc-role'),city:_v('auc-city'),postcode:_v('auc-post'),years_experience:_v('auc-exp'),sector:_v('auc-sect'),work_type:document.getElementById('auc-wt').value,desired_salary:_v('auc-sal'),travel_distance:_v('auc-td'),status:document.getElementById('auc-status').value,availability:_v('auc-avail'),drivers_license:document.getElementById('auc-drv').value,own_vehicle:document.getElementById('auc-veh').value,sewing_machine_experience:document.getElementById('auc-sme').value,willing_to_relocate:document.getElementById('auc-reloc').value,weekend_work:document.getElementById('auc-wknd').value,overtime:document.getElementById('auc-ot').value,techniques:_v('auc-tech'),products:_v('auc-prod'),sewing_machines_used:_v('auc-machines'),additional_info:_v('auc-info'),log:[]};
+  const res=await db.insert('sw_upholstery_candidates',d);
+  if(res&&res[0]){upholstC.unshift(res[0]);cm('addUCM');renderUC();selUC(res[0].id);toast('Upholstery candidate added ✓');}
+}
+function renderUC(){
+  const q=(document.getElementById('uc-srch')?.value||'').toLowerCase();
+  const f=upholstC.filter(c=>(!q||(c.full_name||'').toLowerCase().includes(q)||(c.job_title||'').toLowerCase().includes(q)||(c.city||'').toLowerCase().includes(q)||(c.techniques||'').toLowerCase().includes(q)||(c.products||'').toLowerCase().includes(q))&&(flt.uc==='all'||c.status===flt.uc));
+  document.getElementById('uc-cnt').textContent=`(${upholstC.length})`;
+  const list=document.getElementById('uc-list');list.innerHTML='';
+  if(!f.length){list.innerHTML='<div style="padding:16px;text-align:center;font-size:11px;color:#bbb;">No results</div>';return;}
+  f.forEach(c=>{const d=document.createElement('div');d.className='item'+(c.id===sel.uc?' on':'');d.onclick=()=>selUC(c.id);d.innerHTML=`<div class="item-name">${esc(c.full_name)}</div><div class="item-sub">${esc(c.job_title||'—')}${c.city?' · '+esc(c.city):''}</div><span class="badge" style="background:${CAND_COL[c.status]||'#888'}">${c.status||'Active'}</span>`;list.appendChild(d);});
+}
+function selUC(id){sel.uc=id;renderUC();renderUCDet();}
+function renderUCDet(){
+  const c=upholstC.find(x=>x.id===sel.uc);if(!c)return;
+  document.getElementById('uc-es').classList.add('hidden');
+  const el=document.getElementById('uc-det');el.classList.remove('hidden');
+  const cidBadge=c.candidate_id?`<span style="font-size:10px;background:#F2EEF8;color:#6A4A8A;padding:1px 7px;border-radius:3px;margin-right:8px;">${esc(c.candidate_id)}</span>`:'';
+  el.innerHTML=`<div class="det">
+  <div class="det-hd">
+    <div><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#6A4A8A;margin-bottom:6px;">🪑 Upholstery Candidate</div><div class="det-name">${esc(c.full_name)}</div><div class="det-meta">${cidBadge}Added ${c.created_at?new Date(c.created_at).toLocaleDateString('en-GB'):'—'} · ${esc(c.city||'Location not set')}${c.postcode?' ('+esc(c.postcode)+')':''}</div></div>
+    <div class="det-acts"><button class="btn btn-ai" onclick="openSubFromCand('uc','${c.id}')">+ Submit</button><button class="btn btn-blue" onclick="openCompose('uc')">✉ Email</button><button class="btn btn-danger" onclick="delCand('uc','${c.id}')">Delete</button></div>
+  </div>
+  <div class="stages">${CAND_STATUSES.map(s=>`<button class="stage-pill${c.status===s?' on':''}" style="${c.status===s?'background:'+CAND_COL[s]+';border-color:'+CAND_COL[s]:''}" onclick="setCandStatus('uc','${s}')">${s}</button>`).join('')}</div>
+  <div class="sec">Personal Details</div>
+  <div class="fg">
+    <div class="ff"><label>Full Name</label><input value="${esc(c.full_name)}" oninput="upC('uc','full_name',this.value)"></div>
+    <div class="ff"><label>Email</label><input value="${esc(c.email||'')}" oninput="upC('uc','email',this.value)"></div>
+    <div class="ff"><label>Phone</label><input value="${esc(c.phone||'')}" oninput="upC('uc','phone',this.value)"></div>
+    <div class="ff"><label>Job Title</label><input value="${esc(c.job_title||'')}" oninput="upC('uc','job_title',this.value)"></div>
+    <div class="ff"><label>City</label><input value="${esc(c.city||'')}" oninput="upC('uc','city',this.value)"></div>
+    <div class="ff"><label>Postcode</label><input value="${esc(c.postcode||'')}" oninput="upC('uc','postcode',this.value)"></div>
+    <div class="ff"><label>Candidate ID</label><input value="${esc(c.candidate_id||'')}" oninput="upC('uc','candidate_id',this.value)" placeholder="e.g. UPH-1761763327948"></div>
+    <div class="ff"><label>Profile Status</label><select onchange="upC('uc','profile_status',this.value)">${['Active','Pending','Approved','Rejected'].map(s=>`<option${c.profile_status===s?' selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="ff"><label>Source</label><input value="${esc(c.source||'')}" oninput="upC('uc','source',this.value)"></div>
+    <div class="ff"><label>Submission Date</label><input value="${esc(c.submission_date||'')}" oninput="upC('uc','submission_date',this.value)"></div>
+  </div>
+  <div class="sec">Work Preferences</div>
+  <div class="fg">
+    <div class="ff"><label>Years Experience</label><input value="${esc(c.years_experience||'')}" oninput="upC('uc','years_experience',this.value)"></div>
+    <div class="ff"><label>Sector</label><input value="${esc(c.sector||'')}" oninput="upC('uc','sector',this.value)"></div>
+    <div class="ff"><label>Work Type</label><input value="${esc(c.work_type||'')}" oninput="upC('uc','work_type',this.value)"></div>
+    <div class="ff"><label>Desired Salary</label><input value="${esc(c.desired_salary||'')}" oninput="upC('uc','desired_salary',this.value)"></div>
+    <div class="ff"><label>Travel Distance</label><input value="${esc(c.travel_distance||'')}" oninput="upC('uc','travel_distance',this.value)"></div>
+    <div class="ff"><label>Availability</label><input value="${esc(c.availability||'')}" oninput="upC('uc','availability',this.value)"></div>
+    <div class="ff"><label>Willing to Relocate?</label><input value="${esc(c.willing_to_relocate||'')}" oninput="upC('uc','willing_to_relocate',this.value)"></div>
+    <div class="ff"><label>Drivers Licence?</label><input value="${esc(c.drivers_license||'')}" oninput="upC('uc','drivers_license',this.value)"></div>
+    <div class="ff"><label>Own Vehicle?</label><input value="${esc(c.own_vehicle||'')}" oninput="upC('uc','own_vehicle',this.value)"></div>
+    <div class="ff"><label>Weekend Work?</label><input value="${esc(c.weekend_work||'')}" oninput="upC('uc','weekend_work',this.value)"></div>
+    <div class="ff"><label>Overtime?</label><input value="${esc(c.overtime||'')}" oninput="upC('uc','overtime',this.value)"></div>
+  </div>
+  <div class="sec">Skills &amp; Experience</div>
+  <div class="fg">
+    <div class="ff full"><label>Techniques</label><textarea rows="2" oninput="upC('uc','techniques',this.value)">${esc(c.techniques||'')}</textarea></div>
+    <div class="ff full"><label>Products Made</label><textarea rows="2" oninput="upC('uc','products',this.value)">${esc(c.products||'')}</textarea></div>
+    <div class="ff"><label>Sewing Machine Experience?</label><input value="${esc(c.sewing_machine_experience||'')}" oninput="upC('uc','sewing_machine_experience',this.value)"></div>
+    <div class="ff full"><label>Sewing Machines Used</label><textarea rows="2" oninput="upC('uc','sewing_machines_used',this.value)">${esc(c.sewing_machines_used||'')}</textarea></div>
+    <div class="ff full"><label>Sewing Details</label><textarea rows="2" oninput="upC('uc','sewing_details',this.value)">${esc(c.sewing_details||'')}</textarea></div>
+    <div class="ff full"><label>Additional Info</label><textarea rows="2" oninput="upC('uc','additional_info',this.value)">${esc(c.additional_info||'')}</textarea></div>
+  </div>
+  <div class="sec">Consent</div>
+  <div class="fg">
+    <div class="ff"><label>Processing</label><select onchange="upC('uc','consent_processing',this.value)">${['No','Yes'].map(v=>`<option${c.consent_processing===v?' selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="ff"><label>Storage</label><select onchange="upC('uc','consent_storage',this.value)">${['No','Yes'].map(v=>`<option${c.consent_storage===v?' selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="ff"><label>Contact</label><select onchange="upC('uc','consent_contact',this.value)">${['No','Yes'].map(v=>`<option${c.consent_contact===v?' selected':''}>${v}</option>`).join('')}</select></div>
+    <div class="ff"><label>Marketing</label><select onchange="upC('uc','consent_marketing',this.value)">${['No','Yes'].map(v=>`<option${c.consent_marketing===v?' selected':''}>${v}</option>`).join('')}</select></div>
+  </div>
+  <hr class="dv">
+  <div class="sec">Updates &amp; Notes</div>
+  <div id="uc-log">${renderLog(c,'uc')}</div>
+  <div class="log-add"><textarea id="uc-log-in" placeholder="Add a call note, interview feedback, update…"></textarea><button class="log-btn" onclick="addLog('uc')">+ Add</button></div>
+  <hr class="dv">
+  <div class="sec">Submission History</div>
+  <div>${(()=>{const subs=submissions.filter(s=>s.cand_id===c.id);if(!subs.length)return '<div style="color:#9A9490;font-size:12px;padding:4px 0;">No submissions yet.</div>';const SUB_C={'Pending':'#B8870A','Sent':'#3A6A9A','Interview':'#6A4A8A','Placed':'#3D6B4F','Rejected':'#DA4C3F'};return subs.map(s=>`<div style="padding:8px 12px;margin-bottom:5px;background:#FAF8F5;border-left:3px solid ${SUB_C[s.status]||'#3A6A9A'};display:flex;align-items:center;justify-content:space-between;"><div style="font-size:12px;"><strong>${esc(s.co_name||'—')}</strong>${s.job_title?' · '+esc(s.job_title):s.role?' · '+esc(s.role):''}<div style="font-size:10px;color:#9A9490;margin-top:2px;">${s.created_at?new Date(s.created_at).toLocaleDateString('en-GB'):'—'}</div></div><span class="badge" style="background:${SUB_C[s.status]||'#3A6A9A'}">${s.status}</span></div>`).join('');})()}</div>
+</div>`;
+}
+
+// Shared candidate helpers
+async function setCandStatus(type,s){
+  const tbl=type==='sc'?'sw_sewing_candidates':'sw_upholstery_candidates';
+  const arr=type==='sc'?sewingC:upholstC;
+  const c=arr.find(x=>x.id===sel[type]);if(!c)return;
+  c.status=s;await db.update(tbl,{status:s},c.id);
+  if(type==='sc'){renderSC();renderSCDet();}else{renderUC();renderUCDet();}
+}
+let _cT={};
+function upC(type,f,v){
+  const tbl=type==='sc'?'sw_sewing_candidates':'sw_upholstery_candidates';
+  const arr=type==='sc'?sewingC:upholstC;
+  const c=arr.find(x=>x.id===sel[type]);if(!c)return;
+  c[f]=v;clearTimeout(_cT[type+f]);_cT[type+f]=setTimeout(()=>db.update(tbl,{[f]:v},c.id),800);
+  if(f==='full_name'){document.querySelector(`#${type}-det .det-name`).textContent=v;if(type==='sc')renderSC();else renderUC();}
+}
+async function delCand(type,id){
+  if(!confirm('Delete this candidate?'))return;
+  const tbl=type==='sc'?'sw_sewing_candidates':'sw_upholstery_candidates';
+  await db.del(tbl,id);
+  if(type==='sc'){sewingC=sewingC.filter(x=>x.id!==id);sel.sc=null;renderSC();document.getElementById('sc-det').classList.add('hidden');document.getElementById('sc-es').classList.remove('hidden');}
+  else{upholstC=upholstC.filter(x=>x.id!==id);sel.uc=null;renderUC();document.getElementById('uc-det').classList.add('hidden');document.getElementById('uc-es').classList.remove('hidden');}
+}
+// ── Excel Import ─────────────────────────────────────────────────────────
+function triggerImport(type){document.getElementById('import-'+type).click();}
+function handleImport(event,type){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      const wb=XLSX.read(e.target.result,{type:'binary',cellDates:true});
+      let sn=wb.SheetNames[0];
+      if(type==='sc'){const m=wb.SheetNames.find(n=>n.toLowerCase().includes('sewing'));if(m)sn=m;}
+      else{const m=wb.SheetNames.find(n=>n.toLowerCase().includes('upholst'));if(m)sn=m;}
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[sn],{defval:''});
+      if(!rows.length){toast('No data found in file','#DA4C3F');return;}
+      const norm=s=>s.toString().toLowerCase().replace(/[\s_]/g,'');
+      const tbl=type==='sc'?'sw_sewing_candidates':'sw_upholstery_candidates';
+      const arr=type==='sc'?sewingC:upholstC;
+      const TARGET=['full_name','email','phone','job_title','city','postcode','years_experience','sector','work_type','desired_salary','travel_distance','machines','products','materials','sewing_techniques','techniques','availability','status','additional_info','open_to_relocation','drivers_license','own_vehicle'];
+      let added=0,updated=0;
+      for(const row of rows){
+        const data={};
+        Object.keys(row).forEach(k=>{
+          const nk=norm(k);
+          TARGET.forEach(f=>{if(norm(f)===nk||nk.includes(norm(f)))data[f]=row[k]?.toString()||'';});
+          if(nk==='name'||nk==='fullname')data.full_name=row[k]?.toString()||'';
+        });
+        if(!data.full_name)continue;
+        const existing=arr.find(x=>(x.email&&x.email===data.email)||(x.full_name?.toLowerCase()===data.full_name?.toLowerCase()));
+        if(existing){
+          const upd=Object.fromEntries(Object.entries(data).filter(([k,v])=>v&&k!=='id'&&k!=='log'));
+          await db.update(tbl,upd,existing.id);Object.assign(existing,upd);updated++;
+        }else{
+          const res=await db.insert(tbl,{...data,log:[{date:nowStr(),text:`📥 Imported from Excel: ${sn}`}]});
+          if(res&&res[0]){arr.unshift(res[0]);added++;}
+        }
+      }
+      if(type==='sc')renderSC();else renderUC();
+      toast(`✓ ${added} added, ${updated} updated`,'#3D6B4F');
+    }catch(err){console.error(err);toast('Error reading file','#DA4C3F');}
+    event.target.value='';
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ── Paste Import ──────────────────────────────────────────────────────────
+function setPasteType(t){pasteType=t;}
+function showPasteStep(n){
+  document.getElementById('paste-step1').classList.toggle('hidden',n!==1);
+  document.getElementById('paste-step2').classList.toggle('hidden',n!==2);
+}
+function doPasteExtract(){
+  const raw=document.getElementById('paste-raw').value;if(!raw.trim())return;
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  const fm={city:'city',postcode:'postcode',years_experience:'years_experience',sector:'sector',work_type:'work_type',desired_salary:'desired_salary',travel_distance:'travel_distance',drivers_license:'drivers_license',own_vehicle:'own_vehicle',machines:'machines',products:'products',materials:'materials',sewing_techniques:'sewing_techniques',techniques:'techniques',availability:'availability',full_name:'full_name',job_title:'job_title',email:'email',phone:'phone',open_to_relocation:'open_to_relocation',weekend_work:'weekend_work',overtime:'overtime',additional_info:'additional_info'};
+  pasteData={};let i=0;
+  while(i<lines.length){
+    const k=lines[i].toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');
+    if(fm[k]&&i+1<lines.length){const nk=lines[i+1].toLowerCase().replace(/\s+/g,'_').replace(/[^a-z0-9_]/g,'');if(!fm[nk]){pasteData[fm[k]]=lines[i+1]==='No value'?'':lines[i+1];i+=2;continue;}}
+    i++;
+  }
+  const fields=['full_name','email','phone','job_title','city','postcode','years_experience','sector','work_type','desired_salary','travel_distance','availability','drivers_license','own_vehicle','machines','sewing_techniques','techniques','products','materials','additional_info'];
+  const textareaFields=['machines','sewing_techniques','techniques','products','materials','additional_info'];
+  document.getElementById('paste-fields').innerHTML=fields.map(f=>{
+    const isTa=textareaFields.includes(f);
+    const label=f.replace(/_/g,' ');
+    const val=esc(pasteData[f]||'');
+    const cls='ff'+(isTa?' full':'');
+    return`<div class="${cls}"><label>${label}</label>${isTa?`<textarea rows="2" id="pf-${f}" oninput="pasteData['${f}']=this.value">${val}</textarea>`:`<input id="pf-${f}" value="${val}" oninput="pasteData['${f}']=this.value">`}</div>`;
+  }).join('');
+  showPasteStep(2);
+}
+async function savePasteImport(){
+  const tbl=pasteType==='sc'?'sw_sewing_candidates':'sw_upholstery_candidates';
+  if(!pasteData.full_name){alert('Could not find a name — please enter one.');return;}
+  const res=await db.insert(tbl,{...pasteData,status:'Active',source:'Paste Import',log:[]});
+  if(res&&res[0]){
+    if(pasteType==='sc'){sewingC.unshift(res[0]);renderSC();selSC(res[0].id);}
+    else{upholstC.unshift(res[0]);renderUC();selUC(res[0].id);}
+    cm('pasteImpM');document.getElementById('paste-raw').value='';pasteData={};showPasteStep(1);
+    SW(pasteType);toast('Candidate imported ✓');
+  }
+}
+// ── Submissions ───────────────────────────────────────────────────────────
+// ── Jobs ─────────────────────────────────────────────────────────────────
+let _jobPool='all';
+function setJobPool(pool,btn){
+  _jobPool=pool;
+  document.querySelectorAll('#jobs-pool-flt .fb').forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  renderJobs();
+}
+function populateJobCoDropdown(){
+  const sel=document.getElementById('ajob-co');
+  if(!sel)return;
+  sel.innerHTML='<option value="">— select company —</option>';
+  companies.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name+(c.loc?' ('+c.loc+')':'');sel.appendChild(o);});
+}
+function renderJobs(){
+  const q=(document.getElementById('jobs-srch')?.value||'').toLowerCase();
+  const f=jobs.filter(j=>{
+    const matchQ=!q||(j.position_name||'').toLowerCase().includes(q)||(j.co_name||'').toLowerCase().includes(q)||(j.location||'').toLowerCase().includes(q);
+    const matchSt=flt.jobs==='all'||j.status===flt.jobs;
+    const matchPool=_jobPool==='all'||j.job_pool===_jobPool;
+    return matchQ&&matchSt&&matchPool;
+  });
+  document.getElementById('jobs-cnt').textContent=`(${jobs.length})`;
+  const list=document.getElementById('jobs-list');list.innerHTML='';
+  if(!f.length){list.innerHTML='<div style="padding:16px;text-align:center;font-size:11px;color:#bbb;">No jobs found</div>';return;}
+  const JOB_COL={'Open':'#3D6B4F','Filled':'#3A6A9A','Closed':'#9A9490'};
+  f.forEach(j=>{
+    const d=document.createElement('div');
+    d.className='item'+(j.id===sel.job?' on':'');
+    d.onclick=()=>selJob(j.id);
+    d.innerHTML=`<div class="item-name">${esc(j.position_name)}</div><div class="item-sub">${esc(j.co_name||'—')}${j.location?' · '+esc(j.location):''}</div><div style="display:flex;gap:6px;margin-top:4px;"><span class="badge" style="background:${JOB_COL[j.status]||'#888'}">${j.status||'Open'}</span><span class="badge" style="background:#B8870A">${j.job_pool||'sewing'}</span></div>`;
+    list.appendChild(d);
+  });
+}
+function selJob(id){sel.job=id;renderJobs();renderJobDet();}
+function renderJobDet(){
+  const j=jobs.find(x=>x.id===sel.job);if(!j)return;
+  document.getElementById('jobs-es').classList.add('hidden');
+  const el=document.getElementById('jobs-det');el.classList.remove('hidden');
+  const JOB_COL={'Open':'#3D6B4F','Filled':'#3A6A9A','Closed':'#9A9490'};
+  el.innerHTML=`<div class="det">
+  <div class="det-hd">
+    <div><div style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#B8870A;margin-bottom:6px;">💼 ${esc(j.job_pool||'Job')} Vacancy</div>
+    <div class="det-name">${esc(j.position_name)}</div>
+    <div class="det-meta">${esc(j.co_name||'—')}${j.location?' · '+esc(j.location):''}</div></div>
+    <div class="det-acts">
+      <button class="btn btn-ai" onclick="openSubFromJob('${j.id}')">+ Submit Candidate</button>
+      <button class="btn btn-danger" onclick="delJob('${j.id}')">Delete</button>
+    </div>
+  </div>
+  <div class="stages">${['Open','Filled','Closed'].map(s=>`<button class="stage-pill${j.status===s?' on':''}" style="${j.status===s?'background:'+JOB_COL[s]+';border-color:'+JOB_COL[s]:''}" onclick="setJobStatus('${s}')">${s}</button>`).join('')}</div>
+  <div class="sec">Job Details</div>
+  <div class="fg">
+    <div class="ff full"><label>Position / Role</label><input value="${esc(j.position_name)}" oninput="upJob('position_name',this.value)"></div>
+    <div class="ff"><label>Company</label><select onchange="upJob('co_id',this.value);upJob('co_name',this.options[this.selectedIndex].text)">${[{id:'',name:'— select —'},...companies].map(c=>`<option value="${c.id}"${j.co_id===c.id?' selected':''}>${esc(c.name)}</option>`).join('')}</select></div>
+    <div class="ff"><label>Location</label><input value="${esc(j.location||'')}" oninput="upJob('location',this.value)"></div>
+    <div class="ff"><label>Salary</label><input value="${esc(j.salary||'')}" oninput="upJob('salary',this.value)"></div>
+    <div class="ff"><label>Salary Min (£)</label><input type="number" value="${j.salary_min||''}" oninput="upJob('salary_min',this.value)"></div>
+    <div class="ff"><label>Salary Max (£)</label><input type="number" value="${j.salary_max||''}" oninput="upJob('salary_max',this.value)"></div>
+    <div class="ff"><label>Per</label><select onchange="upJob('salary_period',this.value)">${['hour','day','week','year'].map(p=>`<option${j.salary_period===p?' selected':''}>${p}</option>`).join('')}</select></div>
+    <div class="ff"><label>Job Type</label><input value="${esc(j.job_type||'')}" oninput="upJob('job_type',this.value)"></div>
+    <div class="ff"><label>Hours per week</label><input value="${esc(j.hours||'')}" oninput="upJob('hours',this.value)"></div>
+    <div class="ff"><label>Work Location</label><select onchange="upJob('work_location',this.value)">${['In person','Hybrid','Remote'].map(p=>`<option${j.work_location===p?' selected':''}>${p}</option>`).join('')}</select></div>
+    <div class="ff"><label>Experience Required</label><input value="${esc(j.experience_required||'')}" oninput="upJob('experience_required',this.value)"></div>
+    <div class="ff"><label>Candidate Pool</label><select onchange="upJob('job_pool',this.value)">${['sewing','upholstery'].map(p=>`<option${j.job_pool===p?' selected':''}>${p}</option>`).join('')}</select></div>
+    <div class="ff"><label>Source</label><input value="${esc(j.source||'')}" oninput="upJob('source',this.value)"></div>
+    <div class="ff"><label>Application Email</label><input type="email" value="${esc(j.contact_email||'')}" oninput="upJob('contact_email',this.value)" placeholder="e.g. accounts@njcthermal.co.uk"></div>
+  </div>
+  <div class="sec">Description &amp; Requirements</div>
+  <div class="fg">
+    <div class="ff full"><label>Job Description</label><textarea rows="5" oninput="upJob('description',this.value)">${esc(j.description||'')}</textarea></div>
+    <div class="ff full"><label>Requirements</label><textarea rows="3" oninput="upJob('requirements',this.value)">${esc(j.requirements||'')}</textarea></div>
+    <div class="ff full"><label>Benefits</label><textarea rows="2" oninput="upJob('benefits',this.value)">${esc(j.benefits||'')}</textarea></div>
+  </div>
+  <hr class="dv">
+  <div class="sec">Submissions for this Job</div>
+  <div>${submissions.filter(s=>s.job_id===j.id).length?submissions.filter(s=>s.job_id===j.id).map(s=>`<div style="padding:8px 12px;margin-bottom:6px;background:#FAF8F5;border-left:3px solid #3A6A9A;font-size:12px;"><strong>${esc(s.cand_name||'—')}</strong> · ${esc(s.cand_role||'—')} · <span style="color:#3D6B4F;">${s.status}</span></div>`).join(''):'<div style="color:#9A9490;font-size:12px;padding:8px 0;">No submissions yet for this job.</div>'}</div>
+</div>`;
+}
+async function addJob(){
+  const pos=_v('ajob-pos');if(!pos){alert('Position required');return;}
+  const coId=document.getElementById('ajob-co').value;
+  const co=companies.find(x=>x.id===coId);
+  const d={
+    co_id:coId||null,co_name:co?.name||'',position_name:pos,location:_v('ajob-loc'),
+    salary:_v('ajob-sal'),salary_min:parseFloat(_v('ajob-salmin'))||null,
+    salary_max:parseFloat(_v('ajob-salmax'))||null,
+    salary_period:document.getElementById('ajob-salper').value,
+    job_type:document.getElementById('ajob-type').value,
+    hours:_v('ajob-hrs'),work_location:document.getElementById('ajob-wloc').value,
+    experience_required:_v('ajob-exp'),
+    job_pool:document.getElementById('ajob-pool').value,
+    source:_v('ajob-src'),contact_email:_v('ajob-email'),description:_v('ajob-desc'),
+    requirements:_v('ajob-req'),benefits:_v('ajob-ben'),
+    status:'Open',log:[]
+  };
+  const res=await db.insert('sw_jobs',d);
+  if(res&&res[0]){jobs.unshift(res[0]);cm('addJobM');renderJobs();selJob(res[0].id);toast('Job added ✓','#3D6B4F');}
+}
+let _jobT={};
+function upJob(f,v){
+  const j=jobs.find(x=>x.id===sel.job);if(!j)return;
+  j[f]=v;
+  clearTimeout(_jobT[f]);
+  _jobT[f]=setTimeout(()=>db.update('sw_jobs',{[f]:v},j.id),800);
+  if(f==='position_name'){const el=document.querySelector('#jobs-det .det-name');if(el)el.textContent=v;renderJobs();}
+}
+async function setJobStatus(s){
+  const j=jobs.find(x=>x.id===sel.job);if(!j)return;
+  j.status=s;await db.update('sw_jobs',{status:s},j.id);renderJobs();renderJobDet();
+}
+async function delJob(id){
+  if(!confirm('Delete this job vacancy?'))return;
+  await db.del('sw_jobs',id);
+  jobs=jobs.filter(x=>x.id!==id);
+  document.getElementById('jobs-det').classList.add('hidden');
+  document.getElementById('jobs-es').classList.remove('hidden');
+  renderJobs();toast('Job deleted');
+}
+function openSubFromJob(jobId){
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  populateSubDrop();
+  om('addSubM');
+  setTimeout(()=>{
+    const coSel=document.getElementById('sub-co');
+    [...coSel.options].forEach(o=>{if(o.value===j.co_id)o.selected=true;});
+    populateSubJobs();
+    document.getElementById('sub-pool').value=j.job_pool==='sewing'?'sc':'uc';
+    populateSubCand();
+    setTimeout(()=>{
+      const jobSel=document.getElementById('sub-job');
+      [...jobSel.options].forEach(o=>{if(o.value===jobId)o.selected=true;});
+      document.getElementById('sub-role').value=j.position_name||'';
+    },60);
+  },50);
+}
+function populateSubJobs(){
+  const coId=document.getElementById('sub-co').value;
+  const jobSel=document.getElementById('sub-job');
+  jobSel.innerHTML='<option value="">— select job or leave blank —</option>';
+  jobs.filter(j=>!coId||j.co_id===coId).forEach(j=>{
+    const o=document.createElement('option');o.value=j.id;
+    o.textContent=j.position_name+(j.location?' · '+j.location:'');
+    jobSel.appendChild(o);
+  });
+}
+
+function populateSubDrop(){
+  const coSel=document.getElementById('sub-co');
+  coSel.innerHTML='<option value="">— select company —</option>';
+  companies.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name+(c.loc?' ('+c.loc+')':'');coSel.appendChild(o);});
+  populateSubCand();
+}
+function populateSubCand(){
+  const pool=document.getElementById('sub-pool')?.value||'sc';
+  const arr=pool==='sc'?sewingC:upholstC;
+  const s=document.getElementById('sub-cand');
+  s.innerHTML='<option value="">— select candidate —</option>';
+  arr.filter(c=>c.status!=='Inactive').forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.full_name+(c.city?' · '+c.city:'');s.appendChild(o);});
+}
+function openSubFromCo(){
+  populateSubDrop();om('addSubM');
+  const co=companies.find(x=>x.id===sel.co);
+  if(co){[...document.getElementById('sub-co').options].forEach(o=>{if(o.value===co.id)o.selected=true;});}
+}
+function openSubFromCand(type,id){
+  populateSubDrop();
+  document.getElementById('sub-pool').value=type;populateSubCand();
+  om('addSubM');
+  setTimeout(()=>{[...document.getElementById('sub-cand').options].forEach(o=>{if(o.value===id)o.selected=true;});},50);
+}
+async function addSub(){
+  const pool=document.getElementById('sub-pool').value;
+  const candId=document.getElementById('sub-cand').value;
+  const coId=document.getElementById('sub-co').value;
+  if(!candId||!coId){alert('Please select a candidate and company');return;}
+  const arr=pool==='sc'?sewingC:upholstC;
+  const cand=arr.find(x=>x.id===candId);
+  const co=companies.find(x=>x.id===coId);
+  const jobId=document.getElementById('sub-job')?.value||null;const jobVac=jobId?jobs.find(x=>x.id===jobId):null;const d={cand_id:candId,cand_type:pool,co_id:coId,job_id:jobId||null,role:_v('sub-role')||(jobVac?.position_name||''),status:'Pending',notes:_v('sub-notes'),email_sent:false};
+  const res=await db.insert('sw_submissions',d);
+  if(res&&res[0]){
+    submissions.unshift({...res[0],cand_name:cand?.full_name||'',cand_role:cand?.job_title||'',co_name:co?.name||'',job_title:jobVac?.position_name||''});
+    cm('addSubM');renderSubs();toast('Submission created ✓','#3D6B4F');
+    if(confirm('Open AI email generator for this submission?'))openSubEmail(res[0].id);
+  }
+}
+function renderSubs(){
+  const el=document.getElementById('subs-list');if(!el)return;
+  if(!submissions.length){el.innerHTML=`<div style="text-align:center;padding:48px;color:#6A6560;"><div style="font-size:32px;margin-bottom:12px;">📨</div><div style="font-family:var(--serif);font-size:18px;margin-bottom:6px;color:#1C1A17;">No submissions yet</div><p style="font-size:12px;">Create a submission from any candidate or company profile, or click <strong>+ New Submission</strong>.</p></div>`;return;}
+  el.innerHTML=submissions.map(s=>`<div class="sub-card" style="border-left-color:${SUB_COL[s.status]||'#3A6A9A'};">
+    <div class="sub-card-info">
+      <div class="sub-card-name">${esc(s.cand_name||'Unknown Candidate')}</div>
+      <div class="sub-card-detail"><strong>${esc(s.cand_role||'—')}</strong> → <strong>${esc(s.co_name||'Unknown Company')}</strong>${s.role?' · '+esc(s.role):''}</div>
+      <div style="margin-top:5px;display:flex;align-items:center;gap:8px;">
+        <span class="badge" style="background:${SUB_COL[s.status]||'#3A6A9A'}">${s.status}</span>
+        <span style="font-size:10px;color:#6A6560;">${s.created_at?new Date(s.created_at).toLocaleDateString('en-GB'):'—'}</span>
+        ${s.email_sent?'<span style="font-size:10px;color:#3D6B4F;">✉ Email sent</span>':''}
+      </div>
+    </div>
+    <div class="sub-card-acts">
+      <select style="padding:4px 8px;border:1px solid var(--warm-rule);font-family:var(--sans);font-size:10px;cursor:pointer;outline:none;background:#fff;" onchange="updateSubStatus('${s.id}',this.value)">
+        ${['Pending','Sent','Interview','Placed','Rejected'].map(st=>`<option value="${st}" ${s.status===st?'selected':''}>${st}</option>`).join('')}
+      </select>
+      <button class="btn btn-ai" style="font-size:10px;padding:4px 12px;" onclick="openSubEmail('${s.id}')">✦ AI Email</button>
+      <button class="btn btn-danger" style="font-size:10px;padding:4px 10px;" onclick="deleteSub('${s.id}')">✕</button>
+    </div>
+  </div>`).join('');
+}
+async function updateSubStatus(id,status){
+  await db.update('sw_submissions',{status},id);
+  const s=submissions.find(x=>x.id===id);if(s)s.status=status;renderSubs();
+}
+async function deleteSub(id){
+  if(!confirm('Delete this submission?'))return;
+  await db.del('sw_submissions',id);
+  submissions=submissions.filter(x=>x.id!==id);renderSubs();
+}
+function openSubEmail(subId){
+  const sub=submissions.find(x=>x.id===subId);if(!sub)return;
+  const arr=sub.cand_type==='sc'?sewingC:upholstC;
+  const cand=arr.find(x=>x.id===sub.cand_id);
+  const co=companies.find(x=>x.id===sub.co_id);
+  if(!cand||!co){toast('Candidate or company not found','#DA4C3F');return;}
+  _aiSubId=subId;_aiCo=co;_aiCand=cand;aiSelPool=sub.cand_type;aiSelCand=cand.id;
+  openAIGenDirect(co,cand,sub.cand_type);
+}
+// ── Compose & Send ────────────────────────────────────────────────────────
+function openCompose(type){
+  if(type==='co'){
+    const c=companies.find(x=>x.id===sel.co);if(!c)return;
+    const tpl=TEMPLATES.find(t=>t.id===activeTpl)||TEMPLATES[0];
+    document.getElementById('c-to').value=c.email||'';
+    document.getElementById('c-subj').value=tpl.subject(c);
+    document.getElementById('c-body').value=tpl.body(c);
+    composeCtx={entity:c,type:'co',table:'sw_companies'};
+  }else{
+    const arr=type==='sc'?sewingC:upholstC;
+    const c=arr.find(x=>x.id===sel[type]);if(!c)return;
+    const fn=(c.full_name||'').split(' ')[0];
+    document.getElementById('c-to').value=c.email||'';
+    document.getElementById('c-subj').value='Re: Your Application — Stitchway Recruitment';
+    document.getElementById('c-body').value=`Hi ${fn},\n\n\n\nKind regards,\n[Your Name]\nStitchway Recruitment\n0116 298 5475 | ryan.s@stitchway.site`;
+    composeCtx={entity:c,type,table:type==='sc'?'sw_sewing_candidates':'sw_upholstery_candidates'};
+  }
+  om('composeM');setTimeout(()=>document.getElementById('c-body').focus(),80);
+}
+function doSend(){
+  const to=document.getElementById('c-to').value.trim();
+  const subj=document.getElementById('c-subj').value.trim();
+  const body=document.getElementById('c-body').value;
+  window.open(`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`,'_blank');
+  if(composeCtx){
+    const{entity,type,table}=composeCtx;
+    entity.log=entity.log||[];
+    entity.log.push({date:nowStr(),text:`✉ Email sent: "${subj}" → ${to||'(no address)'}`,type:'email'});
+    db.update(table,{log:entity.log},entity.id);
+    const logEl=document.getElementById(type+'-log');if(logEl)logEl.innerHTML=renderLog(entity,type);
+    if(_aiSubId){db.update('sw_submissions',{email_sent:true},_aiSubId);const s=submissions.find(x=>x.id===_aiSubId);if(s)s.email_sent=true;renderSubs();_aiSubId=null;}
+  }
+  cm('composeM');toast('✉ Mail client opened');
+}
+function copyEmail(){
+  const subj=document.getElementById('c-subj').value;
+  const body=document.getElementById('c-body').value;
+  navigator.clipboard.writeText('Subject: '+subj+'\n\n'+body).then(()=>toast('Email copied ✓'));
+}
+
+// ── Templates ─────────────────────────────────────────────────────────────
+function setTpl(id){activeTpl=id;renderCoDet();}
+function copyTpl(){
+  const c=companies.find(x=>x.id===sel.co);const tpl=TEMPLATES.find(t=>t.id===activeTpl);if(!c||!tpl)return;
+  navigator.clipboard.writeText('Subject: '+tpl.subject(c)+'\n\n'+tpl.body(c)).then(()=>{
+    const btn=document.getElementById('co-copy');if(btn){btn.textContent='✓ Copied';setTimeout(()=>btn.textContent='Copy',2000);}
+    c.log=c.log||[];c.log.push({date:nowStr(),text:`📋 Copied template: ${tpl.title}`});
+    db.update('sw_companies',{log:c.log},c.id);toast('Copied to clipboard ✓');
+  });
+}
+const TEMPLATES=[
+  {id:'outreach',label:'01 Outreach',title:'Initial Outreach to Client',when:'First contact — no prior relationship',subject:c=>`Specialist Textile & Upholstery Recruitment — Stitchway`,body:c=>`Dear Hiring Team,\n\nI hope you're well. My name is [Your Name] from Stitchway Recruitment — we specialise exclusively in textile and upholstery placements across the UK, and I'm reaching out because I believe we could help ${c.name||'[Company Name]'}.\n\nWe work with manufacturers, contract upholsterers, and soft furnishings businesses to place sewing machinists, upholsterers, fabric cutters, and production operatives.\n\nWe offer both permanent recruitment and temp-to-perm solutions, giving you the flexibility to trial a candidate in your production environment before moving to a permanent placement.\n\nWould you be open to a quick call this week or next?\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475 · stitchway.site`},
+  {id:'followup',label:'02 Follow-Up',title:'Follow-Up After No Response',when:'5–7 days after outreach with no reply',subject:c=>`Re: Specialist Textile & Upholstery Recruitment — Stitchway`,body:c=>`Hi ${c.contact||'[First Name]'},\n\nJust following up on my previous email — completely understand if the timing wasn't right.\n\nIf ${c.name||'[Company Name]'} ever needs a skilled sewing machinist, upholsterer, cutter, or production operative, I'd love to be your first call.\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475`},
+  {id:'fees',label:'03 Fee Structure',title:'Fee Structure & How We Work',when:'When a client asks about fees',subject:c=>`Our Fee Structure — Stitchway Recruitment`,body:c=>`Hi ${c.contact||'[First Name]'},\n\nHappy to set out exactly how our fees work.\n\nWe work on a 13-week temp-to-perm basis. Our margin is £1.99 per hour, built into the weekly charge rate alongside the worker's pay and all employer on-costs. There's no placement fee, no percentage of salary, and no transfer fee at the end of the 13 weeks.\n\nFor a candidate on minimum wage (£12.71/hr, 40 hours a week):\n\n— Worker's base pay: £12.71/hr\n— Holiday pay (12.07%): £1.53/hr\n— Employer NI (15%): £1.45/hr\n— Employer pension (3%): £0.33/hr\n— Stitchway margin: £1.99/hr\n— Total charge rate: £18.05/hr\n— Weekly invoice: £722.07\n\nOur total margin across the full 13 weeks: £1,034.80. After that, the candidate is yours permanently at no further cost.\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475 · stitchway.site`},
+  {id:'cv_intro',label:'04 Candidate Intro',title:'Cold Candidate Introduction',when:'Presenting a candidate to a client',subject:c=>`Candidate Introduction — [Role Title], ${c.name||'[Company Name]'}`,body:c=>`Dear Hiring Team,\n\nI hope you're well. My name is [Your Name] from Stitchway Recruitment — we specialise exclusively in textile and upholstery placements across the UK.\n\nI'm reaching out because I believe we have a candidate who is a strong match for your [Role Title] role.\n\nThe candidate brings [X] years' experience in [sector/background], with a background that includes [key experience relevant to the role].\n\nKey strengths relevant to your role:\n— [Skill matched to job spec]\n— [Skill matched to job spec]\n— [Skill matched to job spec]\n\nPractical details:\n— Based in [city/region]\n— Available within [notice period]\n\nWe offer both permanent recruitment and temp-to-perm solutions, giving you the flexibility to trial a candidate in your production environment before moving to a permanent placement.\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475 · stitchway.site`},
+  {id:'interested',label:'05 Client Interested',title:'Client Interested — Full Costs',when:'Client has expressed interest in a candidate',subject:c=>`Re: Candidate — Costs & Next Steps`,body:c=>`Hi ${c.contact||'[First Name]'},\n\nReally glad to hear you're interested — I think there's a genuine fit here.\n\nWe place candidates on a 13-week temp-to-perm basis. You take them on through us for 13 working weeks — you see them in your environment, working with your team, on your products. After those 13 weeks, they're yours permanently with no transfer fee and nothing further to pay.\n\nOn cost:\n— Weekly charge rate: £722.07 (£12.71/hr, 40 hrs/week)\n— Covers: gross pay, holiday pay (12.07%), employer NI (15%), pension (3%), and our £1.99/hr margin\n— Our total margin across 13 weeks: £1,034.80\n— Transfer fee at the end: £0\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475 · stitchway.site`},
+  {id:'int_confirm',label:'06 Interview',title:'Interview Confirmation to Client',when:'After client agrees to interview',subject:c=>`Interview Confirmed — [Candidate Name] — [Date]`,body:c=>`Hi ${c.contact||'[First Name]'},\n\nGreat news — [Candidate First Name] is confirmed for interview.\n\nDetails:\n— Candidate: [Candidate Full Name]\n— Date: [Day, DD Month YYYY]\n— Time: [HH:MM]\n— Format: [In person / Video call / Phone]\n\n[Candidate First Name] has been briefed and will arrive [X] minutes early asking for ${c.contact||'[Contact Name]'}.\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475`},
+  {id:'post_int',label:'07 Post-Interview',title:'Post-Interview Follow-Up',when:'24–48 hours after interview',subject:c=>`Re: Interview — [Candidate Name] — Feedback`,body:c=>`Hi ${c.contact||'[First Name]'},\n\nI hope the interview with [Candidate First Name] went well.\n\n— Would you like to move forward?\n— Any concerns you'd like me to address?\n— Shall we discuss next steps?\n\n[Candidate First Name] was really positive and is keen to hear back.\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475`},
+  {id:'start_confirm',label:'08 Start Confirm',title:'Candidate Start Confirmation',when:'Candidate confirmed to start',subject:c=>`Start Confirmed — [Candidate Name] — ${c.name||'[Company]'}`,body:c=>`Hi ${c.contact||'[First Name]'},\n\nJust confirming that [the candidate] is set to start with you on [start date].\n\nThe 13-week period begins from their first day. You'll receive weekly invoices from us during this time, and after 13 completed weeks they're yours permanently with no further fees.\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475`},
+  {id:'week13',label:'09 Week 13',title:'Week 13 — Permanent Conversion',when:'Candidate approaching end of 13-week period',subject:c=>`Week 13 — Permanent Conversion — [Candidate Name]`,body:c=>`Hi ${c.contact||'[First Name]'},\n\nJust a note to let you know that [the candidate] is approaching their 13th week with you — which means the permanent conversion is almost here.\n\nOnce they complete week 13, they're yours permanently with no transfer fee and nothing further to pay us.\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475 · stitchway.site`},
+  {id:'checkin',label:'10 Check-In',title:'Post-Placement Check-In',when:'2–4 weeks after candidate starts',subject:c=>`Checking In — [Candidate Name] at ${c.name||'[Company]'}`,body:c=>`Hi ${c.contact||'[First Name]'},\n\nJust checking in now that [Candidate First Name] has been with you for [X] weeks.\n\nHow are things going? Are they settling in well?\n\nKind regards,\n[Your Name]\nStitchway Recruitment\nryan.s@stitchway.site · 0116 298 5475`},
+];
+// ── AI Email Generator ────────────────────────────────────────────────────
+function openAIGen(){
+  const co=companies.find(x=>x.id===sel.co);
+  if(!co){toast('Select a company first','#DA4C3F');return;}
+  _aiCo=co;_aiCand=null;aiSelCand=null;aiSelPool=null;_aiSubId=null;
+  document.getElementById('ai-result-wrap').classList.add('hidden');
+  document.getElementById('ai-use-btn').classList.add('hidden');
+  document.getElementById('ai-status-note').textContent='Select a candidate and click Generate';
+  document.getElementById('ai-job-desc').value='';
+  const allC=[...sewingC.map(c=>({...c,_pool:'sc'})),...upholstC.map(c=>({...c,_pool:'uc'}))].filter(c=>c.status!=='Inactive'&&c.status!=='Placed');
+  const grid=document.getElementById('ai-cand-list');
+  grid.innerHTML=allC.length?allC.map(c=>`<div class="ai-cand-card" id="aicard-${c.id}" onclick="selectAICand('${c.id}','${c._pool}')"><div class="ai-cand-name">${esc(c.full_name)}</div><div class="ai-cand-sub">${esc(c.job_title||'—')} · ${esc(c.city||'—')}</div><div class="ai-cand-sub" style="margin-top:2px;"><span class="badge" style="background:${CAND_COL[c.status]||'#888'};font-size:9px;">${c.status}</span></div></div>`).join(''):'<div style="grid-column:1/-1;font-size:12px;color:#6A6560;padding:8px;">No active candidates in database.</div>';
+  om('aiGenM');
+}
+function openAIGenDirect(co,cand,pool){
+  _aiCo=co;_aiCand=cand;aiSelPool=pool;aiSelCand=cand.id;
+  document.getElementById('ai-result-wrap').classList.add('hidden');
+  document.getElementById('ai-use-btn').classList.add('hidden');
+  document.getElementById('ai-status-note').textContent='Click Generate to write the email';
+  document.getElementById('ai-job-desc').value='';
+  document.getElementById('ai-cand-list').innerHTML=`<div class="ai-cand-card sel" style="border-left:3px solid var(--coral);"><div class="ai-cand-name">${esc(cand.full_name)}</div><div class="ai-cand-sub">${esc(cand.job_title||'—')} · ${esc(cand.city||'—')}</div></div>`;
+  om('aiGenM');
+}
+function selectAICand(id,pool){
+  aiSelCand=id;aiSelPool=pool;
+  const arr=pool==='sc'?sewingC:upholstC;
+  _aiCand=arr.find(x=>x.id===id);
+  document.querySelectorAll('.ai-cand-card').forEach(el=>el.classList.remove('sel'));
+  document.getElementById('aicard-'+id)?.classList.add('sel');
+}
+async function runAIGenerate(){
+  if(!aiSelCand){toast('Select a candidate first','#DA4C3F');return;}
+  const co=_aiCo;const arr=aiSelPool==='sc'?sewingC:upholstC;const cand=_aiCand||arr.find(x=>x.id==aiSelCand);
+  if(!co||!cand)return;
+  const btn=document.getElementById('ai-gen-btn');btn.textContent='Generating…';btn.disabled=true;
+  document.getElementById('ai-status-note').textContent='Writing email…';
+  document.getElementById('ai-result-wrap').classList.add('hidden');
+  const jobDesc=document.getElementById('ai-job-desc').value.trim();
+  const sys=`You are a professional email writer for Stitchway Recruitment, a specialist agency placing candidates in textile and upholstery roles across the UK. Stitchway operates on a 13-week temp-to-perm basis with a transparent £1.99/hr margin. No placement fee, no transfer fee.\nTone: professional, warm, credible. UK business English. Not salesy. No emojis. Use em-dashes (—) for bullet points.\nCRITICAL: NEVER include the candidate's full name, phone number, email, or postcode. Refer to them by role title or gender-neutral pronouns only.`;
+  const usr=`Write a cold candidate introduction email to ${co.name}${co.contact?' addressed to '+co.contact:''} in ${co.loc||'the UK'}.\n\nCANDIDATE DATA:\n${JSON.stringify({job_title:cand.job_title,city:cand.city,years_experience:cand.years_experience,sector:cand.sector,machines:cand.machines||cand.sewing_machines_used||'',products:cand.products||'',materials:cand.materials||'',techniques:cand.techniques||cand.sewing_techniques||'',availability:cand.availability,travel_distance:cand.travel_distance,drivers_license:cand.drivers_license,own_vehicle:cand.own_vehicle,overtime:cand.overtime,weekend_work:cand.weekend_work,additional_info:cand.additional_info},null,1)}\n${jobDesc?'\nJOB SPEC:\n'+jobDesc:''}\n\nStructure:\n1. Brief opener\n2. One sentence: representing a candidate for [role type] work at ${co.name}\n3. 2–3 sentence candidate summary — experience, relevant strengths\n4. 4–6 em-dash bullet points of key skills\n5. 3–4 em-dash bullet points of practical details (location, availability, travel — skip empty ones)\n6. Exactly: "We offer both permanent recruitment and temp-to-perm solutions, giving you the flexibility to trial a candidate in your production environment before moving to a permanent placement."\n7. Soft close\n8. Sign-off: [Your Name]\\nStitchway Recruitment\\nryan.s@stitchway.site · 0116 298 5475 · stitchway.site\n\nOutput body only. Then on a NEW LINE write: SUBJECT: [your subject line]`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1200,system:sys,messages:[{role:'user',content:usr}]})});
+    const data=await resp.json();
+    const text=data.content?.map(b=>b.text||'').join('')||'';
+    const sm=text.match(/SUBJECT:\s*(.+)/i);
+    document.getElementById('ai-subj-out').value=sm?sm[1].trim():`Candidate Introduction — ${co.name}`;
+    document.getElementById('ai-body-out').textContent=text.replace(/\nSUBJECT:.*/i,'').trim();
+    document.getElementById('ai-result-wrap').classList.remove('hidden');
+    document.getElementById('ai-use-btn').classList.remove('hidden');
+    document.getElementById('ai-status-note').textContent='Review and edit, then use this email';
+  }catch(e){
+    document.getElementById('ai-status-note').textContent='Error — check connection';
+    toast('AI generation failed','#DA4C3F');
+  }
+  btn.textContent='✦ Generate';btn.disabled=false;
+}
+function useAIEmail(){
+  const co=_aiCo;if(!co)return;
+  document.getElementById('c-to').value=co.email||'';
+  document.getElementById('c-subj').value=document.getElementById('ai-subj-out').value;
+  document.getElementById('c-body').value=document.getElementById('ai-body-out').textContent;
+  composeCtx={entity:co,type:'co',table:'sw_companies'};
+  cm('aiGenM');om('composeM');
+}
+// ── AI Match ──────────────────────────────────────────────────────────────
+function popMatchDrop(){
+  const s=document.getElementById('m-co');const cur=s.value;
+  s.innerHTML='<option value="">— select —</option>';
+  companies.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name+(c.loc?' ('+c.loc+')':'');s.appendChild(o);});
+  if(cur)s.value=cur;
+}
+function clrM(){document.getElementById('m-out').innerHTML='';}
+async function runMatch(){
+  const pref=document.getElementById('m-pool').value;
+  let pool=[];
+  if(pref==='sc'||pref==='both')pool=[...pool,...sewingC.map(c=>({...c,_pool:'Sewing'}))];
+  if(pref==='uc'||pref==='both')pool=[...pool,...upholstC.map(c=>({...c,_pool:'Upholstery'}))];
+  pool=pool.filter(c=>c.status!=='Inactive');
+  if(!pool.length){toast('No active candidates to match','#DA4C3F');return;}
+  const coId=document.getElementById('m-co').value;
+  const co=companies.find(x=>x.id===coId);
+  const role=document.getElementById('m-role').value.trim();
+  const skills=document.getElementById('m-sk').value.trim();
+  const salary=parseInt(document.getElementById('m-sal').value)||0;
+  const availOnly=document.getElementById('m-av').value==='yes';
+  const out=document.getElementById('m-out');
+  out.innerHTML='<div class="ai-ld"><div class="dot"></div><div class="dot"></div><div class="dot"></div><span>Scoring candidates with AI…</span></div>';
+  const prompt=`You are a specialist UK textile and upholstery recruiter.\nVACANCY:\nCompany: ${co?co.name+' in '+(co.loc||'?'):'Not specified'}\nRole: ${role||'Not specified'}\nSkills needed: ${skills||'Not specified'}\nSalary budget: ${salary?'£'+salary+'/yr':'Not specified'}\nImmediate availability required: ${availOnly?'Yes':'No preference'}\n\nSCORING: Skills/role match — 40pts, Location — 30pts, Salary — 15pts, Availability — 15pts\n\nCANDIDATES:\n${JSON.stringify(pool.map(c=>({id:c.id,pool:c._pool,name:c.full_name,role:c.job_title,techniques:c.techniques||c.sewing_techniques||'',products:c.products||'',machines:c.machines||c.sewing_machines_used||'',city:c.city,travel:c.travel_distance,salary:c.desired_salary,status:c.status,availability:c.availability})),null,1)}\n\nReturn ONLY a JSON array:\n[{"id":"...","total":85,"skillScore":32,"locScore":24,"salScore":15,"availScore":14,"reason":"One specific sentence"}]\nSort by total descending.`;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1400,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    const text=data.content?.map(b=>b.text||'').join('')||'';
+    renderMatchOut(JSON.parse(text.replace(/```json|```/g,'').trim()),co,role,pool);
+  }catch(e){
+    const scored=pool.map(c=>{
+      const req=(skills+' '+role).toLowerCase().split(/[\s,]+/).filter(Boolean);
+      const ct=[c.techniques,c.sewing_techniques,c.products,c.machines,c.sewing_machines_used,c.job_title,c.materials].join(' ').toLowerCase();
+      let sk=0;req.forEach(r=>{if(r.length>2&&ct.includes(r))sk+=Math.floor(38/Math.max(req.length,1));});sk=Math.min(sk,40);
+      const ls=c.city?14:0;
+      const sal=parseInt(c.desired_salary)||0;
+      const ss=salary&&sal?(Math.abs(salary-sal)<3000?15:Math.abs(salary-sal)<7000?8:2):7;
+      const as=c.status==='Available'?15:c.status==='Active'?10:5;
+      return{id:c.id,total:sk+ls+ss+as,skillScore:sk,locScore:ls,salScore:ss,availScore:as,reason:`${c._pool} candidate · ${c.status}`};
+    }).sort((a,b)=>b.total-a.total);
+    renderMatchOut(scored,co,role,pool);
+  }
+}
+function renderMatchOut(results,co,role,pool){
+  const out=document.getElementById('m-out');
+  if(!results.length){out.innerHTML='<p style="color:#6A6560;font-size:12px;">No candidates to score.</p>';return;}
+  out.innerHTML=`<div style="margin-bottom:12px;"><div class="sec" style="margin:0;">${results.length} Candidates Scored</div><div style="font-size:11px;color:#6A6560;margin-top:4px;">${co?co.name:''} ${role?'· '+role:''}</div></div>`+
+  results.map(r=>{
+    const c=pool.find(x=>x.id==r.id);if(!c)return'';
+    const col=r.total>=70?'#3D6B4F':r.total>=45?'#B8870A':'#DA4C3F';
+    const pc=c._pool==='Sewing'?'#3A6A9A':'#6A4A8A';
+    return`<div class="m-card" onclick="jumpToC('${c.id}','${c._pool}')">
+      <div class="score-ring" style="background:${col}18;color:${col};border:2px solid ${col}40;">${r.total}</div>
+      <div class="m-info">
+        <div class="m-name">${esc(c.full_name)} <span class="badge" style="background:${pc};font-size:9px;">${c._pool}</span> <span class="badge" style="background:${CAND_COL[c.status]||'#888'};font-size:9px;">${c.status}</span></div>
+        <div class="m-detail">${esc(c.job_title||'—')} · ${esc(c.city||'—')} · ${c.desired_salary?'£'+Number(c.desired_salary).toLocaleString()+'/yr':'Salary TBC'} · Travel: ${c.travel_distance||'?'}mi</div>
+        ${c.techniques||c.sewing_techniques?`<div style="font-size:10px;color:#6A6560;margin-top:3px;">Techniques: ${esc((c.techniques||c.sewing_techniques||'').substring(0,80))}…</div>`:''}
+        <div class="m-reason">${esc(r.reason)}</div>
+        <div class="m-bars">
+          <div class="m-bar"><div class="m-bar-lbl">Skills</div><div class="m-bar-tr"><div class="m-bar-fill" style="width:${(r.skillScore/40)*100}%;background:#3A6A9A;"></div></div></div>
+          <div class="m-bar"><div class="m-bar-lbl">Location</div><div class="m-bar-tr"><div class="m-bar-fill" style="width:${(r.locScore/30)*100}%;background:#6A4A8A;"></div></div></div>
+          <div class="m-bar"><div class="m-bar-lbl">Salary</div><div class="m-bar-tr"><div class="m-bar-fill" style="width:${(r.salScore/15)*100}%;background:#B8870A;"></div></div></div>
+          <div class="m-bar"><div class="m-bar-lbl">Availability</div><div class="m-bar-tr"><div class="m-bar-fill" style="width:${(r.availScore/15)*100}%;background:#3D6B4F;"></div></div></div>
+        </div>
+        <div class="m-acts">
+          <button class="btn btn-ghost" style="font-size:10px;padding:4px 10px;" onclick="event.stopPropagation();jumpToC('${c.id}','${c._pool}')">View Profile</button>
+          <button class="btn btn-primary" style="font-size:10px;padding:4px 10px;" onclick="event.stopPropagation();openSubFromCand('${c._pool==='Sewing'?'sc':'uc'}','${c.id}')">+ Submit</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function jumpToC(id,pool){const type=pool==='Sewing'?'sc':'uc';SW(type);if(type==='sc')selSC(id);else selUC(id);}
+// ── Pipeline ──────────────────────────────────────────────────────────────
+function openAddPlacement(){
+  const cs=document.getElementById('plac-cand');cs.innerHTML='<option value="">— select candidate —</option>';
+  [...sewingC,...upholstC].filter(c=>c.status!=='Inactive').forEach(c=>{const o=document.createElement('option');o.value=c.id+'|'+(sewingC.includes(c)?'sc':'uc');o.textContent=c.full_name+(c.job_title?' ('+c.job_title+')':'');cs.appendChild(o);});
+  const cos=document.getElementById('plac-co');cos.innerHTML='<option value="">— select company —</option>';
+  companies.forEach(c=>{const o=document.createElement('option');o.value=c.id;o.textContent=c.name;cos.appendChild(o);});
+  document.getElementById('plac-start').value=new Date().toISOString().split('T')[0];
+  document.getElementById('plac-rate').value='722.07';
+  om('addPlacM');
+}
+async function addPlacement(){
+  const cv=document.getElementById('plac-cand').value;
+  const coId=document.getElementById('plac-co').value;
+  if(!cv||!coId){alert('Please select a candidate and company');return;}
+  const [candId,candType]=cv.split('|');
+  const arr=candType==='uc'?upholstC:sewingC;
+  const cand=arr.find(x=>x.id==candId);
+  const co=companies.find(x=>x.id==coId);
+  if(!cand||!co)return;
+  const d={cand_id:cand.id,cand_name:cand.full_name,cand_type:candType||'sc',co_id:co.id,co_name:co.name,start_date:document.getElementById('plac-start').value,weekly_rate:parseFloat(document.getElementById('plac-rate').value)||722.07,role:_v('plac-role'),status:'Active'};
+  const res=await db.insert('sw_placements',d);
+  if(res&&res[0]){
+    placements.unshift(res[0]);
+    const tbl=candType==='uc'?'sw_upholstery_candidates':'sw_sewing_candidates';
+    cand.status='Placed';cand.log=cand.log||[];cand.log.push({date:nowStr(),text:`🏭 Placed at ${co.name} — 13-week period started`});
+    await db.update(tbl,{status:'Placed',log:cand.log},cand.id);
+    co.stage='Offer/Placed';co.log=co.log||[];co.log.push({date:nowStr(),text:`✓ Placement started: ${cand.full_name}`});
+    await db.update('sw_companies',{stage:'Offer/Placed',log:co.log},co.id);
+    cm('addPlacM');renderPipeline();renderSC();renderUC();
+    toast('Placement added to pipeline ✓','#3D6B4F');
+  }
+}
+function renderPipeline(){
+  const board=document.getElementById('pipeline-board');
+  const active=placements.filter(p=>p.status==='Active');
+  const done=placements.filter(p=>p.status==='Converted'||p.status==='Ended');
+  if(!active.length&&!done.length){
+    board.innerHTML=`<div style="text-align:center;padding:48px 20px;color:#6A6560;"><div style="font-size:32px;margin-bottom:12px;">📋</div><div style="font-family:var(--serif);font-size:18px;margin-bottom:6px;color:#1C1A17;">No active placements</div><div style="font-size:12px;margin-bottom:16px;">Track candidates through the 13-week temp-to-perm period.</div><button class="btn btn-primary" onclick="openAddPlacement()">+ Add Placement</button></div>`;
+    return;
+  }
+  const cols=['Weeks 1–3','Weeks 4–6','Weeks 7–9','Weeks 10–12','Week 13 ✓'];
+  const groups=[[],[],[],[],[]];
+  active.forEach(p=>{const w=weeksElapsed(p.start_date);groups[w<=3?0:w<=6?1:w<=9?2:w<=12?3:4].push(p);});
+  board.innerHTML=`<div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;"><button class="btn btn-primary" onclick="openAddPlacement()">+ Add Placement</button><span style="font-size:11px;color:#6A6560;">${active.length} active · ${done.length} completed</span></div>
+  <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;min-width:900px;">
+    ${cols.map((col,i)=>`<div class="p-col"><div class="p-col-hd"><span class="p-col-title">${col}</span><span class="p-col-cnt">${groups[i].length}</span></div><div class="p-cards">${groups[i].length?groups[i].map(p=>{
+      const w=weeksElapsed(p.start_date);const pct=Math.round((w/13)*100);
+      const wl=weekLabel(p.start_date);
+      return`<div class="p-card">
+        <div class="p-card-name">${esc(p.cand_name)}</div>
+        <div class="p-card-sub">${esc(p.co_name)}</div>
+        <div class="p-card-sub">${esc(p.role||'—')}</div>
+        <div class="p-card-week" style="color:${wl.col}">${wl.label} · £${p.weekly_rate}/wk</div>
+        <div style="font-size:9px;color:var(--mid);margin-bottom:3px;">${wl.sub}</div>
+        <div class="week-bar"><div class="week-fill" style="width:${wl.pct}%;background:${wl.col}"></div></div>
+        <div style="display:flex;gap:5px;margin-top:6px;">
+          ${w>=13?`<button class="btn btn-primary" style="font-size:9px;padding:3px 8px;" onclick="convertPlacement('${p.id}')">Convert to Perm</button>`:''}
+          <button class="btn btn-ghost" style="font-size:9px;padding:3px 8px;" onclick="endPlacement('${p.id}')">End</button>
+          <button class="btn btn-blue" style="font-size:9px;padding:3px 8px;" onclick="jumpToC('${p.cand_id}','${p.cand_type==='uc'?'Upholstery':'Sewing'}')">View</button>
+        </div>
+      </div>`;
+    }).join(''):`<div class="p-empty">No placements</div>`}</div></div>`).join('')}
+  </div>
+  ${done.length?`<div style="margin-top:24px;"><div class="sec">Completed Placements</div>${done.map(p=>`<div style="background:#fff;border:1px solid var(--warm-rule);border-left:3px solid ${p.status==='Converted'?'#3D6B4F':'#DA4C3F'};padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;"><div><div style="font-weight:600;font-size:13px;">${esc(p.cand_name)} → ${esc(p.co_name)}</div><div style="font-size:11px;color:#6A6560;">${esc(p.role||'—')} · Started ${p.start_date} · £${p.weekly_rate}/wk</div></div><span class="badge" style="background:${p.status==='Converted'?'#3D6B4F':'#DA4C3F'}">${p.status}</span></div>`).join('')}</div>`:''}`;
+}
+async function convertPlacement(id){
+  if(!confirm('Mark as permanently converted? This completes the 13-week period.'))return;
+  await db.update('sw_placements',{status:'Converted'},id);
+  const p=placements.find(x=>x.id===id);if(p){p.status='Converted';const co=companies.find(x=>x.id===p.co_id);if(co){co.log=co.log||[];co.log.push({date:nowStr(),text:`🎉 ${p.cand_name} permanently converted — 13-week period complete. No transfer fee.`});await db.update('sw_companies',{log:co.log},co.id);}}
+  renderPipeline();toast('🎉 Permanent conversion confirmed!','#3D6B4F');
+}
+async function endPlacement(id){
+  if(!confirm('End this placement early?'))return;
+  await db.update('sw_placements',{status:'Ended'},id);
+  const p=placements.find(x=>x.id===id);if(p)p.status='Ended';
+  renderPipeline();toast('Placement ended','#6A6560');
+}
+
+
+// ── Dashboard ──────────────────────────────────────────────────────────────
+let _dashPool='sc';
+function setDashCandPool(pool,btn){
+  _dashPool=pool;
+  document.getElementById('dash-cand-sewing').classList.toggle('on',pool==='sc');
+  document.getElementById('dash-cand-upholstery').classList.toggle('on',pool==='uc');
+  renderDashCands();
+}
+function renderDash(){
+  // Date greeting
+  const dateEl=document.getElementById('dash-date');
+  if(dateEl){
+    const d=new Date();
+    dateEl.textContent=d.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+  // KPI cards
+  const activeP=placements.filter(p=>p.status==='Active');
+  const kpis=[
+    {label:'Sewing Candidates',val:sewingC.length,sub:sewingC.filter(c=>c.status==='Available'||c.status==='Active').length+' available',color:'var(--blue)'},
+    {label:'Upholstery Candidates',val:upholstC.length,sub:upholstC.filter(c=>c.status==='Available'||c.status==='Active'||c.status==='Employed - Open to Offers').length+' available',color:'var(--purple)'},
+    {label:'Open Jobs',val:jobs.filter(j=>j.status==='Open').length,sub:jobs.length+' total',color:'var(--amber)'},
+    {label:'Pending Submissions',val:submissions.filter(s=>s.status==='Pending'||s.status==='Sent').length,sub:submissions.filter(s=>s.status==='Interview').length+' at interview',color:'var(--coral)'},
+    {label:'Active Placements',val:activeP.length,sub:placements.filter(p=>p.status==='Converted').length+' converted',color:'var(--green)'},
+  ];
+  const kpiEl=document.getElementById('dash-kpis');
+  if(kpiEl) kpiEl.innerHTML=kpis.map(k=>`<div style="background:#fff;border:1px solid var(--warm-rule);border-top:3px solid ${k.color};padding:16px 18px;">
+    <div style="font-size:28px;font-family:var(--serif);font-weight:700;color:var(--dark);line-height:1;">${k.val}</div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:${k.color};margin:4px 0 2px;">${k.label}</div>
+    <div style="font-size:10px;color:var(--mid);">${k.sub}</div>
+  </div>`).join('');
+  renderDashCands();
+  // Open jobs
+  const jobsEl=document.getElementById('dash-open-jobs');
+  if(jobsEl){
+    const openJobs=jobs.filter(j=>j.status==='Open').slice(0,8);
+    if(!openJobs.length){jobsEl.innerHTML='<div style="padding:16px;font-size:12px;color:var(--mid);text-align:center;">No open jobs</div>';return;}
+    jobsEl.innerHTML=openJobs.map(j=>`<div onclick="SW('jobs');setTimeout(()=>selJob('${j.id}'),80)" style="padding:10px 16px;border-bottom:1px solid var(--warm-rule);cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background='#fff'">
+      <div style="font-weight:600;font-size:12px;">${esc(j.position_name)}</div>
+      <div style="font-size:11px;color:var(--mid);">${esc(j.co_name||'—')}${j.location?' · '+esc(j.location):''}</div>
+      <div style="font-size:10px;color:var(--amber);margin-top:2px;">${esc(j.salary||'—')} · <span style="color:var(--mid);">${j.job_pool}</span></div>
+    </div>`).join('');
+  }
+  // Pending submissions
+  const subsEl=document.getElementById('dash-pending-subs');
+  if(subsEl){
+    const pending=submissions.filter(s=>s.status==='Pending'||s.status==='Sent'||s.status==='Interview').slice(0,6);
+    if(!pending.length){subsEl.innerHTML='<div style="padding:16px;font-size:12px;color:var(--mid);text-align:center;">No pending submissions</div>';}
+    else{
+      const SC={'Pending':'#B8870A','Sent':'#3A6A9A','Interview':'#6A4A8A'};
+      subsEl.innerHTML=pending.map(s=>`<div style="padding:10px 16px;border-bottom:1px solid var(--warm-rule);display:flex;align-items:center;justify-content:space-between;">
+        <div><div style="font-weight:600;font-size:12px;">${esc(s.cand_name||'—')}</div><div style="font-size:11px;color:var(--mid);">${esc(s.co_name||'—')}${s.job_title?' · '+esc(s.job_title):''}</div></div>
+        <span class="badge" style="background:${SC[s.status]||'#888'}">${s.status}</span>
+      </div>`).join('');
+    }
+  }
+  // Pipeline
+  const pipeEl=document.getElementById('dash-pipeline');
+  if(pipeEl){
+    const active=placements.filter(p=>p.status==='Active').slice(0,6);
+    if(!active.length){pipeEl.innerHTML='<div style="padding:16px;font-size:12px;color:var(--mid);text-align:center;">No active placements</div>';}
+    else{
+      pipeEl.innerHTML=active.map(p=>{
+        const w=weeksElapsed(p.start_date);
+        const pct=Math.round((w/13)*100);
+        const col=w>=11?'var(--green)':w>=7?'var(--amber)':'var(--coral)';
+        return`<div onclick="SW('pipeline')" style="padding:10px 16px;border-bottom:1px solid var(--warm-rule);cursor:pointer;" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background='#fff'">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <div style="font-weight:600;font-size:12px;">${esc(p.cand_name)}</div>
+            <div style="font-size:11px;font-weight:700;color:${col};">Week ${w}/13</div>
+          </div>
+          <div style="font-size:11px;color:var(--mid);margin-bottom:5px;">${esc(p.co_name)}</div>
+          <div style="height:3px;background:var(--warm-rule);"><div style="height:100%;background:${col};width:${pct}%;transition:width 0.4s;"></div></div>
+        </div>`;
+      }).join('');
+    }
+  }
+}
+function renderDashCands(){
+  const el=document.getElementById('dash-recent-cands');if(!el)return;
+  const arr=_dashPool==='sc'?sewingC:upholstC;
+  const recent=[...arr].sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,8);
+  const CAND_COL_D={'Active':'#3A6A9A','Available':'#3D6B4F','Busy':'#7B5EA7','Notice Period':'#B8870A','Employed - Open to Offers':'#1A7A6E','Placed':'#6A4A8A','Inactive':'#aaa'};
+  if(!recent.length){el.innerHTML='<div style="padding:16px;font-size:12px;color:var(--mid);text-align:center;">No candidates yet</div>';return;}
+  el.innerHTML=recent.map(c=>`<div onclick="SW('${_dashPool}');setTimeout(()=>${_dashPool==='sc'?'selSC':'selUC'}('${c.id}'),80)" style="padding:10px 16px;border-bottom:1px solid var(--warm-rule);cursor:pointer;display:flex;align-items:center;justify-content:space-between;" onmouseover="this.style.background='#FAF8F5'" onmouseout="this.style.background='#fff'">
+    <div><div style="font-weight:600;font-size:12px;">${esc(c.full_name)}</div><div style="font-size:11px;color:var(--mid);">${esc(c.job_title||'—')}${c.city?' · '+esc(c.city):''}</div></div>
+    <span class="badge" style="background:${CAND_COL_D[c.status]||'#888'}">${c.status||'—'}</span>
+  </div>`).join('');
+}
+
+// ── Paste Job Import ────────────────────────────────────────────────────────
+function showPasteJobStep(n){
+  document.getElementById('pastejob-step1').classList.toggle('hidden',n!==1);
+  document.getElementById('pastejob-step2').classList.toggle('hidden',n!==2);
+}
+async function doPasteJobExtract(){
+  const raw=document.getElementById('pastejob-raw').value.trim();
+  if(!raw){alert('Please paste some text first');return;}
+  // Try simple key:value parse first (from the format seen in conversation)
+  const parsed={};
+  const lines=raw.split('\n').map(l=>l.trim()).filter(Boolean);
+  // Format 1: interleaved key/value pairs (positionName\nSewing Machinist\n...)
+  const knownKeys=['positionName','location','salary','description','company','companyName'];
+  for(let i=0;i<lines.length-1;i++){
+    const k=lines[i].toLowerCase().replace(/\s+/g,'_');
+    if(lines[i]==='positionName')parsed.position_name=lines[i+1];
+    else if(lines[i]==='location')parsed.location=lines[i+1];
+    else if(lines[i]==='salary')parsed.salary=lines[i+1];
+    else if(lines[i]==='description')parsed.description=lines.slice(i+1).join('\n');
+  }
+  // First line is often company name if it doesn't match a key
+  if(!knownKeys.includes(lines[0])&&!parsed.co_name)parsed.co_name=lines[0];
+
+  // Parse salary range
+  const salMatch=parsed.salary?.match(/£([\d.]+)\s*[-–]\s*£?([\d.]+)/);
+  if(salMatch){parsed.salary_min=parseFloat(salMatch[1]);parsed.salary_max=parseFloat(salMatch[2]);}
+  else{const s1=parsed.salary?.match(/£([\d.]+)/);if(s1)parsed.salary_min=parseFloat(s1[1]);}
+
+  // Detect job pool from description/title
+  const txt=(parsed.position_name||''+(parsed.description||'')).toLowerCase();
+  parsed.job_pool=txt.includes('upholster')||txt.includes('reupholster')?'upholstery':'sewing';
+
+  // Try to match company name to existing company
+  if(parsed.co_name){
+    const match=companies.find(c=>c.name.toLowerCase().includes(parsed.co_name.toLowerCase().split(' ')[0]));
+    if(match){parsed.co_id=match.id;parsed.co_name=match.name;}
+  }
+
+  // Detect hours
+  const hrsMatch=(parsed.description||'').match(/(\d+(?:\.\d+)?)\s*(?:per week|hrs?\/week|hours per week)/i);
+  if(hrsMatch)parsed.hours=hrsMatch[1]+' per week';
+
+  // Detect job type
+  const d2=(parsed.description||'').toLowerCase();
+  if(d2.includes('full-time')||d2.includes('full time'))parsed.job_type='Full-time';
+  if(d2.includes('part-time')||d2.includes('part time'))parsed.job_type=(parsed.job_type?parsed.job_type+', ':'')+'Part-time';
+  if(d2.includes('permanent'))parsed.job_type=(parsed.job_type?parsed.job_type+', ':'')+'Permanent';
+
+  // Extract benefits (lines after "Benefits:" in description)
+  const benMatch=(parsed.description||'').match(/Benefits?[:\s]+([^]+?)(?:Work Location|Job Type|Pay:|$)/i);
+  if(benMatch)parsed.benefits=benMatch[1].replace(/\*/g,'').replace(/\n+/g,' ').trim();
+
+  // Extract apply email
+  const emailMatch=(parsed.description||'').match(/[\w.+-]+@[\w-]+\.[a-z]{2,}/i);
+  if(emailMatch)parsed.contact_email=emailMatch[0];
+
+  // Extract experience required
+  const expMatch=(parsed.description||'').match(/(\d+)\s*\+?\s*years?\s*(?:of\s*)?experience/i)||
+                  (parsed.description||'').match(/at least\s*(\d+)\s*years?/i);
+  if(expMatch)parsed.experience_required=expMatch[1]+' years';
+
+  // Render review form
+  showPasteJobStep(2);
+  const fields=[
+    {id:'pj-coname',label:'Company Name',val:parsed.co_name||'',key:'co_name'},
+    {id:'pj-pos',label:'Position / Role *',val:parsed.position_name||'',key:'position_name'},
+    {id:'pj-loc',label:'Location',val:parsed.location||'',key:'location'},
+    {id:'pj-sal',label:'Salary',val:parsed.salary||'',key:'salary'},
+    {id:'pj-salmin',label:'Salary Min (£)',val:parsed.salary_min||'',key:'salary_min',type:'number'},
+    {id:'pj-salmax',label:'Salary Max (£)',val:parsed.salary_max||'',key:'salary_max',type:'number'},
+    {id:'pj-hrs',label:'Hours per week',val:parsed.hours||'',key:'hours'},
+    {id:'pj-type',label:'Job Type',val:parsed.job_type||'Full-time',key:'job_type'},
+    {id:'pj-exp',label:'Experience Required',val:parsed.experience_required||'',key:'experience_required'},
+    {id:'pj-pool',label:'Candidate Pool',val:parsed.job_pool||'sewing',key:'job_pool'},
+    {id:'pj-email',label:'Application Email',val:parsed.contact_email||'',key:'contact_email'},
+    {id:'pj-ben',label:'Benefits',val:parsed.benefits||'',key:'benefits',full:true},
+    {id:'pj-desc',label:'Description',val:parsed.description||'',key:'description',full:true,rows:6},
+  ];
+  document.getElementById('pastejob-fields').innerHTML=`<input type="hidden" id="pj-coid" value="${parsed.co_id||''}">
+  ${fields.map(f=>`<div class="ff${f.full?' full':''}"><label>${f.label}</label>${f.rows?`<textarea rows="${f.rows}" id="${f.id}">${esc(f.val)}</textarea>`:`<input id="${f.id}" type="${f.type||'text'}" value="${esc(String(f.val))}">`}</div>`).join('')}`;
+}
+async function savePasteJob(){
+  const pos=document.getElementById('pj-pos')?.value?.trim();
+  if(!pos){alert('Position name is required');return;}
+  const coId=document.getElementById('pj-coid')?.value||null;
+  const coNameInput=document.getElementById('pj-coname')?.value?.trim();
+  // If no matched co but name entered, just store name
+  const d={
+    co_id:coId||null,
+    co_name:coId?companies.find(x=>x.id===coId)?.name||coNameInput:coNameInput,
+    position_name:pos,
+    location:document.getElementById('pj-loc')?.value||'',
+    salary:document.getElementById('pj-sal')?.value||'',
+    salary_min:parseFloat(document.getElementById('pj-salmin')?.value)||null,
+    salary_max:parseFloat(document.getElementById('pj-salmax')?.value)||null,
+    salary_period:'hour',
+    job_type:document.getElementById('pj-type')?.value||'',
+    hours:document.getElementById('pj-hrs')?.value||'',
+    work_location:'In person',
+    experience_required:document.getElementById('pj-exp')?.value||'',
+    job_pool:document.getElementById('pj-pool')?.value||'sewing',
+    contact_email:document.getElementById('pj-email')?.value||'',
+    benefits:document.getElementById('pj-ben')?.value||'',
+    description:document.getElementById('pj-desc')?.value||'',
+    status:'Open',log:[]
+  };
+  const res=await db.insert('sw_jobs',d);
+  if(res&&res[0]){
+    jobs.unshift(res[0]);
+    cm('pasteJobM');
+    document.getElementById('pastejob-raw').value='';
+    showPasteJobStep(1);
+    SW('jobs');
+    selJob(res[0].id);
+    toast('Job imported ✓','#3D6B4F');
+  }
+}
+
+// ── Week tracker improvement ───────────────────────────────────────────────
+// Update pipeline card to show exact week and days remaining
+function weekLabel(startDate){
+  const w=weeksElapsed(startDate);
+  const start=new Date(startDate);
+  const endDate=new Date(start);endDate.setDate(endDate.getDate()+91);// 13 weeks
+  const today=new Date();
+  const daysLeft=Math.max(0,Math.round((endDate-today)/(1000*60*60*24)));
+  if(w>=13)return{label:'Week 13+ ✓',sub:'Period complete',col:'var(--green)',pct:100};
+  return{label:`Week ${w} of 13`,sub:daysLeft+' days to conversion',col:w>=11?'var(--green)':w>=7?'var(--amber)':'var(--coral)',pct:Math.round((w/13)*100)};
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded',initApp);
+</script>
+</body>
+</html>
